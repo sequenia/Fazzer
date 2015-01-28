@@ -14,8 +14,15 @@ gem 'jbuilder', '~> 1.2'
 
 gem 'whenever', :require => false
 gem 'nokogiri'
+gem 'mechanize'
 
 gem 'puma'
+
+gem 'capybara', '2.2.0'
+gem 'poltergeist'
+gem 'phantomjs', :require => 'phantomjs/poltergeist'
+
+gem 'tor-privoxy'
 
 group :doc do
   gem 'sdoc', require: false
@@ -30,7 +37,6 @@ group :development, :test do
 end
 
 group :test do
-  gem 'capybara', '2.1.0'
   gem 'factory_girl_rails', '4.2.1'
 end
 

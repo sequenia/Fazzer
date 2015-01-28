@@ -8,6 +8,14 @@ Bundler.require(:default, Rails.env)
 
 module Fazzer
   class Application < Rails::Application
+
+    Capybara.register_driver :poltergeist do |app|
+      Capybara::Poltergeist::Driver.new(app, :phantomjs => Phantomjs.path, :phantomjs_options => ["--proxy=localhost:9050", "--proxy-type=socks5"])
+    end
+
+    Capybara.default_driver = :poltergeist
+
+    Capybara.ignore_hidden_elements = false
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
