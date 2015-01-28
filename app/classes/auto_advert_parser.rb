@@ -10,6 +10,9 @@ class AutoAdvertParser < DromParser
 	@@phone_visible_class = "contactsExVisible"                            # Класс видимого телефона
 	@@show_phones_link_text = "Показать телефон"                           # Текст на ссылке телефона
 
+	@@description_key = "Дополнительно:"
+	@@engine_key = "Двигатель:"
+
 	def get_info(href)
 		session = new_session
 
@@ -93,23 +96,28 @@ class AutoAdvertParser < DromParser
 		def get_another_data(info, page)
 			page.css(@@advert_data_selector).each do |span|
 				key = span.text
-				data = ""
 
-				if key == "Дополнительно:"
-					data = span.parent.text.gsub(/\AДополнительно:/, "")
+				if key == @@description_key
+					info[key] = span.parent.text.gsub(/\A#{@@description_key}/, "")
+				elsif key == @@engine_key
+					text = span.next.text
+					info[:fuel] = DromParser.strip(get_substr(text, /\A([^,\d]*)/) || "", " ")
+					info[:displacement] = (get_substr(text, /\s*(\d*)\s*куб.см\Z/) || 0).to_f / 1000.0
 				else
-					data = DromParser.strip(span.next.text, " ")
+					info[key] = DromParser.strip(span.next.text, " ")
 				end
-
-				info[key] = data
 			end
 		end
 
 		def get_data(node, selector, mask)
 			sub_node = node.at_css(selector)
 			if sub_node
-				sub_node.text.match(mask)[1]
+				get_substr(sub_node.text, mask)
 			end
+		end
+
+		def get_substr(text, mask)
+			(text.match(mask) || [])[1]
 		end
 
 		def get_code(page)
