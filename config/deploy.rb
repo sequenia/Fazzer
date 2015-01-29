@@ -9,7 +9,7 @@ set :repo_url, 'git@github.com:sequenia/Fazzer.git'
 set :branch, 'production'
 application = 'Fazzer'
 set :rvm_type, :user
-set :rvm_ruby_version, '2.0.0-p481'
+set :rvm_ruby_version, '2.0.0-p598'
 set :port, 2222
 
 namespace :foreman do
