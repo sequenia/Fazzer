@@ -22,5 +22,5 @@
 set :output, "/var/www/log/cron_log.log"
 
 every :day, :at => '7:30am' do
-  runner "Machine.loadMachines"
+  runner "AutoParser.setup_last_adverts"
 end
