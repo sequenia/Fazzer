@@ -33,11 +33,12 @@ class AutoAdvertParser < DromParser
 
 				get_another_data(info, page)
 
-				puts "Info for #{info[:mark]} #{info[:model]} parsed. Advert code: #{info[:code]}"
 				session.driver.quit
+				puts "Info for #{info[:mark]} #{info[:model]} parsed. Advert code: #{info[:code]}"
 
 				info
 			else
+				session.driver.quit
 				puts "ERROR: no data on advert page!"
 			end
 		end
