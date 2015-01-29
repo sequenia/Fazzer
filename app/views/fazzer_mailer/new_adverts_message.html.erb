@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style type="text/css">
+      p {
+        margin-top: 5px;
+        margin-bottom: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Под ваш запрос нашлись объявления на <a href="http://www.drom.ru/">drom.ru</a></p>
+    <br>
+
+    <p><b>Запрос</b></p>
+    <% if @filter[:car_mark_name] %>
+      <p>Марка: <%= @filter[:car_mark_name] %></p>
+    <% end %>
+    <% if @filter[:car_model_name] %>
+      <p>Модель: <%= @filter[:car_model_name] %></p>
+    <% end %>
+    <% if @filter[:min_year] %>
+      <p>Минимальный год выпуска: <%= @filter[:min_year] %></p>
+    <% end %>
+    <% if @filter[:max_year] %>
+      <p>Максимальный год выпуска: <%= @filter[:max_year] %></p>
+    <% end %>
+    <% if @filter[:min_price] %>
+      <p>Минимальная цена: <%= @filter[:min_price] %></p>
+    <% end %>
+    <% if @filter[:max_price] %>
+      <p>Максимальная цена: <%= @filter[:max_price] %></p>
+    <% end %>
+    <br>
+
+    <p><b>Объявления</b></p>
+    <% @adverts.each do |advert| %>
+      <p><a href="<%= advert[:url] %>"><%= advert[:url] %></a><p>
+    <% end %>
+  </body>
+</html>

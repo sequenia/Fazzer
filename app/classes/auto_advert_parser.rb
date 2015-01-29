@@ -22,12 +22,13 @@ class AutoAdvertParser < DromParser
 			if !page.at_css(@@advert_text_selector).nil?
 				info = {
 					code: get_code(page),
+					url: href,
 					date: get_date(page),
 					mark: get_mark(page),
 					model: get_model(page),
 					year: get_year(page),
 					price: get_price(page),
-					phones: [] ##get_phones(session)
+					phones: []
 				}
 
 				get_another_data(info, page)

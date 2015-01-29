@@ -22,7 +22,7 @@ gem 'capybara', '2.2.0'
 gem 'poltergeist'
 gem 'phantomjs', :require => 'phantomjs/poltergeist'
 
-gem 'tor-privoxy'
+gem 'dotenv-rails'
 
 group :doc do
   gem 'sdoc', require: false

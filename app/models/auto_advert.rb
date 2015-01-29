@@ -1,24 +1,13 @@
 class AutoAdvert < ActiveRecord::Base
+	belongs_to :city
+	belongs_to :car_mark
+	belongs_to :car_model
 
-	FUEL_TYPES = {
-		:gasoline => "Бензин",
-		:diesel => "Дизель"
-	}
-
-	def fuel
-		value = read_attribute(:fuel)
-		if value
-			value.to_sym
-		end
-	end
-
-	def fuel= (value)
-		write_attribute(:fuel, value.nil? ? value : value.to_s)
-	end
-
-	def self.fuel_types
-		FUEL_TYPES
-	end
+	enum fuel: [:gasoline, :diesel]
+	enum steering_wheel: [:right, :left]
+	enum drive: [:full, :front, :rear]
+	enum transmission: [:manual, :automatic]
+	enum body: [:sedan, :jeep, :hatchback, :estate, :van, :coupe, :open, :pickup]
 
 	def self.create_from_info(info)
 		return nil if info.nil?
@@ -32,14 +21,15 @@ class AutoAdvert < ActiveRecord::Base
 			phone: (info[:phones] || []).join(", "),
 			fuel: self.convert_fuel(info[:fuel]),
 			displacement: info[:displacement],
-			transmission: info["Трансмиссия:"],
-			drive: info["Привод:"],
+			transmission: self.convert_transmission(info["Трансмиссия:"]),
+			drive: self.convert_drive(info["Привод:"]),
 			mileage: info["Пробег, км:"],
-			steering_wheel: info["Руль:"],
+			steering_wheel: self.convert_steering_wheel(info["Руль:"]),
 			description: info["Дополнительно:"],
-			exchange: info[:exchange],
+			exchange: info["Обмен:"],
 			color: info["Цвет:"],
-			body: info["Тип кузова:"]
+			body: self.convert_body(info["Тип кузова:"]),
+			url: info[:url]
 		}
 
 		if info[:mark]
@@ -65,15 +55,77 @@ class AutoAdvert < ActiveRecord::Base
 
 	private
 
-		def self.convert_fuel(fuel)
-			return nil if fuel.nil?
+		def self.convert_fuel(text)
+			return nil if text.nil?
 
-			value = fuel.downcase
+			value = text.downcase
 
 			if value == "бензин"
-				:gasoline
+				"gasoline"
 			elsif value == "дизель"
-				:diesel
+				"diesel"
+			end
+		end
+
+		def self.convert_steering_wheel(text)
+			return nil if text.nil?
+
+			value = text.downcase
+
+			if value == "левый"
+				"left"
+			elsif value == "правый"
+				"right"
+			end
+		end
+
+		def self.convert_drive(text)
+			return nil if text.nil?
+
+			value = text.downcase
+
+			if value == "передний"
+				"front"
+			elsif value == "задний"
+				"rear"
+			elsif value == "4wd"
+				"full"
+			end
+		end
+
+		def self.convert_transmission(text)
+			return nil if text.nil?
+
+			value = text.downcase
+
+			if value == "механика"
+				"manual"
+			elsif value == "автомат"
+				"automatic"
+			end
+		end
+
+		def self.convert_body(text)
+			return nil if text.nil?
+
+			value = text.downcase
+
+			if value == "седан"
+				"sedan"
+			elsif value == "джип (suv)"
+				"jeep"
+			elsif value == "хэтчбек"
+				"hatchback"
+			elsif value == "универсал"
+				"estate"
+			elsif value == "минивэн / микроавтобус"
+				"van"
+			elsif value == "купе"
+				"coupe"
+			elsif value == "открытый"
+				"open"
+			elsif value == "пикап"
+				"pickup"
 			end
 		end
 end

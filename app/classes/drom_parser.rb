@@ -22,7 +22,7 @@ class DromParser
 		max_attempts = 5
 		result = nil
 
-		while attempts < max_attempts
+		while true
 			begin
 				session.visit page
 				puts "Loaded!"
@@ -34,6 +34,11 @@ class DromParser
 			rescue Exception => ex
 				puts "ERROR #{ex.class}: #{ex.message}"
 				attempts += 1
+			end
+
+			if attempts >= max_attempts
+				session.driver.quit
+				break
 			end
 		end
 
