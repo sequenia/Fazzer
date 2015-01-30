@@ -1,5 +1,6 @@
 class AutoParser < DromParser
 	@@adverts_table_selector = "div.tab1 table tr" # Строки таблицы с объявлениями
+	@@pager_selector = "div.pager"
 
 	# Порядок колонок в таблице объявлений
 	@@adverts_table_columns = {
@@ -101,6 +102,11 @@ class AutoParser < DromParser
 						return false
 					end
 				end
+			end
+
+			if page.at_css(@@pager_selector).nil?
+				puts "NO PAGER AT PAGE #{page_href}"
+				return false
 			end
 
 			result
