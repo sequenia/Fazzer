@@ -89,38 +89,36 @@ class AutoParser < DromParser
 
 			if adverts_table.size == 0
 				ParserMessenger.say_about_no_adverts(page_href)
-				puts session.html
 				return false
 			end
 
-			adverts_table.each do |advert|
-				exists = AutoAdvert.exists?({code: advert[:code]})
-				if exists
-					ParserMessenger.say_about_existed_advert(advert)
-					if needs_stop_if_exists(advert, stop_on)
-						ParserMessenger.say_about_stop_region_parsing(stop_on)
-						return false
-					end
-				else
-					sleep 5
-					ParserMessenger.say_about_advert_parsing(advert, page_href)
-					info = AutoAdvertParser.new.get_info(advert[:href])
-					AutoAdvert.create_from_info(info)
+			return save_adverts_from_table(adverts_table, stop_on, page_href) && can_show_next_page(page, page_href)
+		end
+	end
 
-					if needs_stop_if_not_exists(advert, stop_on)
-						ParserMessenger.say_about_stop_region_parsing(stop_on)
-						return false
-					end
+	def save_adverts_from_table(adverts_table, stop_on, page_href)
+		adverts_table.each do |advert|
+			exists = AutoAdvert.exists?({code: advert[:code]})
+			if exists
+				ParserMessenger.say_about_existed_advert(advert)
+				if needs_stop_if_exists(advert, stop_on)
+					ParserMessenger.say_about_stop_region_parsing(stop_on)
+					return false
+				end
+			else
+				sleep 5
+				ParserMessenger.say_about_advert_parsing(advert, page_href)
+				info = AutoAdvertParser.new.get_info(advert[:href])
+				AutoAdvert.create_from_info(info)
+
+				if needs_stop_if_not_exists(advert, stop_on)
+					ParserMessenger.say_about_stop_region_parsing(stop_on)
+					return false
 				end
 			end
-
-			if page.at_css(@@pager_selector).nil?
-				ParserMessenger.say_about_pager_missing(page_href)
-				return false
-			end
-
-			return true
 		end
+
+		return true
 	end
 
 	def needs_stop_if_exists(advert, stop_on)
@@ -133,6 +131,15 @@ class AutoParser < DromParser
 		stop_on == @@save_types[:first_pinned_not_existed] && advert[:type] == @@advert_types[:pinned] ||
 		stop_on == @@save_types[:first_upped_not_existed] && advert[:type] == @@advert_types[:upped] ||
 		stop_on == @@save_types[:first_default_not_existed] && advert[:type] == @@advert_types[:default]
+	end
+
+	def can_show_next_page(page, page_href)
+		if page.at_css(@@pager_selector).nil?
+			ParserMessenger.say_about_pager_missing(page_href)
+			return false
+		end
+
+		return true
 	end
 
 	# Получает таблицу с объявлениями
