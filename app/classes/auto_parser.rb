@@ -81,7 +81,10 @@ class AutoParser < DromParser
 			puts "Adverts: #{adverts_table.collect{ |a| a[:model] + " " + a[:code] }.join(", ")}"
 			session.driver.quit
 
-			result = true
+			if adverts_table.size == 0
+				puts "ERROR! No adverts on page #{page_href}"
+				return false
+			end
 
 			adverts_table.each do |advert|
 				exists = AutoAdvert.exists?({code: advert[:code]})
@@ -109,7 +112,7 @@ class AutoParser < DromParser
 				return false
 			end
 
-			result
+			return true
 		end
 	end
 
