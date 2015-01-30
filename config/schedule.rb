@@ -21,6 +21,6 @@
 
 set :output, "/var/www/log/cron_log.log"
 
-every :day, :at => '9:20am' do
+every :day, :at => '9:35am' do
   runner "AutoParser.new.setup_last_adverts"
 end
