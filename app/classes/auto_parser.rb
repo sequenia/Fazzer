@@ -83,6 +83,7 @@ class AutoParser < DromParser
 
 			if adverts_table.size == 0
 				puts "ERROR! No adverts on page #{page_href}"
+				puts session.html
 				return false
 			end
 
