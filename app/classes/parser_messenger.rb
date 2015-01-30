@@ -51,4 +51,16 @@ class ParserMessenger
 	def self.say_about_pager_missing(page_href)
 		puts "NO PAGER AT PAGE #{page_href}"
 	end
+
+	def self.show_advert_info(info)
+		puts "Info for #{info[:mark]} #{info[:model]} parsed. Advert code: #{info[:code]}"
+	end
+
+	def self.say_about_nothing_data
+		puts "ERROR: no data on advert page!"
+	end
+
+	def self.say_about_captcha
+		puts "ERROR while getting phone: CAPTCHA"
+	end
 end

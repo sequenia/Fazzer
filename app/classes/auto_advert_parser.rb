@@ -12,6 +12,8 @@ class AutoAdvertParser < DromParser
 
 	@@description_key = "Дополнительно:"
 	@@engine_key = "Двигатель:"
+	@@class_attribute = "class"
+	@@span_selector = "span"
 
 	def get_info(href)
 		session = new_session
@@ -34,12 +36,12 @@ class AutoAdvertParser < DromParser
 				get_another_data(info, page)
 
 				session.driver.quit
-				puts "Info for #{info[:mark]} #{info[:model]} parsed. Advert code: #{info[:code]}"
+				ParserMessenger.show_advert_info(info)
 
 				info
 			else
 				session.driver.quit
-				puts "ERROR: no data on advert page!"
+				ParserMessenger.say_about_nothing_data
 			end
 		end
 	end
@@ -70,7 +72,7 @@ class AutoAdvertParser < DromParser
 					end
 				# Если контейнер с телефоном пропал, значит появилась captcha
 				else
-					puts "ERROR while getting phone: CAPTCHA"
+					ParserMessenger.say_about_captcha
 					break
 				end
 			end
@@ -83,9 +85,9 @@ class AutoAdvertParser < DromParser
 			contacts = page.at_css(@@advert_contacts_selector)
 			phones = nil
 
-			if contacts['class'][@@phone_visible_class]
+			if contacts[@@class_attribute][@@phone_visible_class]
 				phones = []
-				contacts.at_css("span").children.each do |text|
+				contacts.at_css(@@span_selector).children.each do |text|
 					if text.text?
 						phones << text.text
 					end
