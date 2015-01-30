@@ -4,7 +4,7 @@ class AutoFilter < ActiveRecord::Base
 
 	def self.check_new_adverts
 		puts "Try to find adverts to filters..."
-		AutoFilter.all.each do |filter|
+		AutoFilter.where("email IS NOT NULL").each do |filter|
 			adverts = filter.find_new_adverts
 			puts "Found #{adverts.size} adverts for filter #{filter.id}"
 
@@ -27,7 +27,7 @@ class AutoFilter < ActiveRecord::Base
 				FazzerMailer.new_adverts_message(
 					adverts.collect { |advert| { url: advert.url } },
 					filter_attrs,
-					"4ybakut2004@gmail.com"
+					filter.email
 				).deliver_later
 			end
 		end
