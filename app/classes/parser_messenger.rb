@@ -63,4 +63,12 @@ class ParserMessenger
 	def self.say_about_captcha
 		puts "ERROR while getting phone: CAPTCHA"
 	end
+
+	def self.show_mark_name(name)
+		puts "------ МАРКА " + name
+	end
+
+	def self.show_model_name(name)
+		puts "МОДЕЛЬ: " + name
+	end
 end

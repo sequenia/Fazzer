@@ -2,6 +2,7 @@ class AutoModelsParser < DromParser
 	@@marks_path = "http://auto.drom.ru/"
 	@@marks_selector = "div.selectCars td a"
 	@@models_selector = "div.selectCars td a"
+	@@href_attibute = "href"
 
 	def save_marks
 		session = new_session
@@ -11,11 +12,11 @@ class AutoModelsParser < DromParser
 
 			page.css(@@marks_selector).each do |mark|
 				name = mark.text.strip
-				puts "------ МАРКА " + name
+				ParserMessenger.show_mark_name(name)
 
 				m = CarMark.find_or_create_by_name(name)
 
-				href = mark.attribute("href")
+				href = mark.attribute(@@href_attibute)
 				if href
 					sleep 4
 					save_models(href.value, m.id)
@@ -33,8 +34,9 @@ class AutoModelsParser < DromParser
 			page = Nokogiri::HTML.parse(session.html)
 
 			page.css(@@models_selector).each do |model|
-				puts "МОДЕЛЬ: " + model.text.strip
-				m = CarModel.find_or_create_by_name_and_mark(model.text.strip, mark_id)
+				name = model.text.strip
+				ParserMessenger.show_model_name(name)
+				m = CarModel.find_or_create_by_name_and_mark(name, mark_id)
 			end
 
 			session.driver.quit
