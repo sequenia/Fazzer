@@ -9,6 +9,10 @@ class AutoAdvert < ActiveRecord::Base
 	enum transmission: [:manual, :automatic]
 	enum body: [:sedan, :jeep, :hatchback, :estate, :van, :coupe, :open, :pickup]
 
+	def self.all_new
+		self.where({is_new: true})
+	end
+
 	def self.create_from_info(info)
 		return nil if info.nil?
 		return nil if info[:code].nil?

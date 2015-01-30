@@ -29,9 +29,10 @@ class AutoFilter < ActiveRecord::Base
 					filter_attrs,
 					"4ybakut2004@gmail.com"
 				).deliver_later
-				AutoFilter.archive_adverts(adverts)
 			end
 		end
+
+		AutoFilter.archive_adverts(AutoAdvert.all_new)
 	end
 
 	def self.archive_adverts(adverts)
