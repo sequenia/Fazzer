@@ -1,6 +1,12 @@
 class AutoParser < DromParser
 	@@adverts_table_selector = "div.tab1 table tr" # Строки таблицы с объявлениями
 	@@pager_selector = "div.pager"
+	@@td_selector = "td"
+	@@a_selector = "a"
+	@@href_attribute_selector = "href"
+	@@advert_id_attribute = "data-bull-id"
+	@@class_attribute = "class"
+	@@img_selector = "img"
 
 	# Порядок колонок в таблице объявлений
 	@@adverts_table_columns = {
@@ -53,15 +59,15 @@ class AutoParser < DromParser
 
 	# Сохраняет в БД последние объявления с переданного региона
 	def save_last_region_adverts(region_href, stop_on)
-		puts "----- Parsing region #{region_href} -----"
+		ParserMessenger.say_about_region_parsing(region_href)
 
 		page_index = 1
 		while save_adverts_from_page(region_href + "page#{page_index}", stop_on)
-			puts "Page #{page_index} for region #{region_href} parsed"
+			ParserMessenger.say_about_region_page_parsed(page_index, region_href)
 			page_index += 1
 		end
 
-		puts "Parsed all new adverts from #{region_href}\n"
+		ParserMessenger.say_about_region_parsing_end(region_href)
 	end
 
 	# Парсит все объявления со страници и сохраняет их в БД.
@@ -76,13 +82,13 @@ class AutoParser < DromParser
 
 		if DromParser.visit_page(session, page_href)
 			page = Nokogiri::HTML.parse(session.html)
-			puts "Getting adverts table from page #{page_href}"
+			ParserMessenger.say_about_adverts_table_parsing(page_href)
 			adverts_table = get_adverts_table(page)
-			puts "Adverts: #{adverts_table.collect{ |a| a[:model] + " " + a[:code] }.join(", ")}"
+			ParserMessenger.print_adverts_table(adverts_table)
 			session.driver.quit
 
 			if adverts_table.size == 0
-				puts "ERROR! No adverts on page #{page_href}"
+				ParserMessenger.say_about_no_adverts(page_href)
 				puts session.html
 				return false
 			end
@@ -90,26 +96,26 @@ class AutoParser < DromParser
 			adverts_table.each do |advert|
 				exists = AutoAdvert.exists?({code: advert[:code]})
 				if exists
-					puts "Advert already exists: #{advert[:code]}"
+					ParserMessenger.say_about_existed_advert(advert)
 					if needs_stop_if_exists(advert, stop_on)
-						puts "STOP! Stop on #{stop_on}"
+						ParserMessenger.say_about_stop_region_parsing(stop_on)
 						return false
 					end
 				else
 					sleep 5
-					puts "Getting full info for #{advert[:type]} #{advert[:model]} on page #{page_href}"
+					ParserMessenger.say_about_advert_parsing(advert, page_href)
 					info = AutoAdvertParser.new.get_info(advert[:href])
 					AutoAdvert.create_from_info(info)
 
 					if needs_stop_if_not_exists(advert, stop_on)
-						puts "STOP! Stop on #{stop_on}"
+						ParserMessenger.say_about_stop_region_parsing(stop_on)
 						return false
 					end
 				end
 			end
 
 			if page.at_css(@@pager_selector).nil?
-				puts "NO PAGER AT PAGE #{page_href}"
+				ParserMessenger.say_about_pager_missing(page_href)
 				return false
 			end
 
@@ -133,12 +139,12 @@ class AutoParser < DromParser
 	def get_adverts_table(adverts_page)
 		adverts = adverts_page.css(@@adverts_table_selector)
 		adverts.drop(1).collect do |advert|
-			columns = advert.css('td')
+			columns = advert.css(@@td_selector)
 			info = {
 				date: columns[@@adverts_table_columns[:date]].text,
 				model: DromParser.strip(columns[@@adverts_table_columns[:model]].text, " \n"),
-				href: columns[@@adverts_table_columns[:date]].css('a').first["href"],
-				code: advert.attribute("data-bull-id").value,
+				href: columns[@@adverts_table_columns[:date]].css(@@a_selector).first[@@href_attribute_selector],
+				code: advert.attribute(@@advert_id_attribute).value,
 				type: get_advert_type(columns[@@adverts_table_columns[:date]])
 			}
 		end
@@ -146,9 +152,9 @@ class AutoParser < DromParser
 
 	# default, pinned, upped
 	def get_advert_type(date_column)
-		image = date_column.at_css("img")
+		image = date_column.at_css(@@img_selector)
 		if image
-			image["class"]
+			image[@@class_attribute]
 		else
 			return @@advert_types[:default]
 		end

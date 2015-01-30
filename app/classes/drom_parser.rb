@@ -16,7 +16,7 @@ class DromParser
 	end
 
 	def self.visit_page(session, page)
-		puts "Loading page #{page}"
+		ParserMessenger.say_about_page_loading(page)
 
 		attempts = 0
 		max_attempts = 5
@@ -25,14 +25,14 @@ class DromParser
 		while true
 			begin
 				session.visit page
-				puts "Loaded!"
+				ParserMessenger.say_loaded(page)
 				result = true
 				break
 			rescue Capybara::Poltergeist::TimeoutError => ex
-				puts "ERROR #{ex.class}: #{ex.message}"
+				ParserMessenger.print_exception(ex)
 				attempts += 1
 			rescue Exception => ex
-				puts "ERROR #{ex.class}: #{ex.message}"
+				ParserMessenger.print_exception(ex)
 				attempts += 1
 			end
 
