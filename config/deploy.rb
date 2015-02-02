@@ -142,6 +142,7 @@ namespace :deploy do
       
       upload!('shared/Procfile', "#{shared_path}/Procfile")
 
+      upload!('shared/.env', "#{shared_path}/.env")
 
       upload!('shared/nginx.conf', "#{shared_path}/nginx.conf")
       sudo 'stop nginx'
@@ -162,6 +163,7 @@ namespace :deploy do
     on roles(:all) do
       execute "ln -s #{shared_path}/config/database.yml #{release_path}/config/database.yml"
       execute "ln -s #{shared_path}/Procfile #{release_path}/Procfile"
+      execute "ln -s #{shared_path}/.env #{release_path}/.env"
       execute "ln -s #{shared_path}/system #{release_path}/public/system"
     end
   end
