@@ -1,5 +1,9 @@
 class ParserMessenger
 
+	def self.about_parsing_start
+		"Start parsing on #{DateTime.now}"
+	end
+
 	def self.say_about_page_loading(page_href)
 		puts "Loading page #{page_href}"
 	end

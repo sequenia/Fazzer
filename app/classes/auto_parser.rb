@@ -43,6 +43,7 @@ class AutoParser < DromParser
 	# Для каждого региона скачивает все прикрепленные объявления
 	# Останавливается при встрече первого обычного объявления, которого нет в БД
 	def setup_last_adverts
+		ParserMessenger.about_parsing_start
 		DromParser.get_regions.each do |region|
 			AutoParser.new.save_last_region_adverts(region, @@save_types[:first_default_not_existed])
 		end
@@ -51,6 +52,7 @@ class AutoParser < DromParser
 	# Сохраняет последние объявления для всех регионов.
 	# Останавливается, когда встречает обычное объявление, сохраненное в БД
 	def save_last_adverts
+		ParserMessenger.about_parsing_start
 		DromParser.get_regions.each do |region|
 			AutoParser.new.save_last_region_adverts(region, @@save_types[:first_default_existed])
 			AutoFilter.check_new_adverts
