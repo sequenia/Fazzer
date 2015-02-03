@@ -7,6 +7,8 @@ class User < ActiveRecord::Base
          :validatable
 
   before_save :ensure_authentication_token
+
+  validates :phone, :presence => true, :uniqueness => { :case_sensitive => false }
  
   def email_required?
     false

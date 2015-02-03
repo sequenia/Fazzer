@@ -2,10 +2,12 @@ class Api::V1::SessionsController < Devise::SessionsController
   skip_before_filter :verify_authenticity_token,
                      :if => Proc.new { |c| c.request.format == 'application/json' }
 
+  skip_before_filter :verify_signed_out_user, only: :destroy
+
   respond_to :json
 
   def create
-    warden.authenticate!(:scope => resource_name, :recall => "#{controller_path}#failure")
+    warden.authenticate!(auth_options)
     render :status => 200,
            :json => { :success => true,
                       :info => "Logged in",
@@ -13,7 +15,7 @@ class Api::V1::SessionsController < Devise::SessionsController
   end
 
   def destroy
-    warden.authenticate!(:scope => resource_name, :recall => "#{controller_path}#failure")
+    warden.authenticate!(auth_options)
     current_user.update_column(:authentication_token, nil)
     render :status => 200,
            :json => { :success => true,
@@ -27,4 +29,10 @@ class Api::V1::SessionsController < Devise::SessionsController
                       :info => "Login Failed",
                       :data => {} }
   end
+
+  protected
+
+    def auth_options
+      { scope: resource_name, recall: "#{controller_path}#failure" }
+    end
 end
