@@ -9,6 +9,8 @@ Fazzer::Application.routes.draw do
         post 'sessions' => 'sessions#create', :as => 'login'
         delete 'sessions' => 'sessions#destroy', :as => 'logout'
       end
+
+      get 'auto_adverts' => 'auto_adverts#index', :as => 'auto_adverts'
     end
   end
   # The priority is based upon order of creation: first created -> highest priority.

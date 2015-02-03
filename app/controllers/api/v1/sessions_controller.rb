@@ -8,6 +8,8 @@ class Api::V1::SessionsController < Devise::SessionsController
 
   def create
     warden.authenticate!(auth_options)
+    current_user.ensure_authentication_token
+    current_user.save
     render :status => 200,
            :json => { :success => true,
                       :info => "Logged in",
