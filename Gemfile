@@ -23,6 +23,7 @@ gem 'poltergeist'
 gem 'phantomjs', :require => 'phantomjs/poltergeist'
 
 gem 'dotenv-rails'
+gem 'devise'
 
 group :doc do
   gem 'sdoc', require: false
