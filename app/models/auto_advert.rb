@@ -9,6 +9,18 @@ class AutoAdvert < ActiveRecord::Base
 	enum transmission: [:manual, :automatic]
 	enum body: [:sedan, :jeep, :hatchback, :estate, :van, :coupe, :open, :pickup]
 
+	def self.get_min_info
+		self.select("auto_adverts.id, auto_adverts.year, auto_adverts.price,\
+			auto_adverts.car_mark_id, car_marks.name AS car_mark_name, \
+			auto_adverts.car_model_id, car_models.name AS car_model_name")
+		.joins("LEFT OUTER JOIN car_marks \
+						ON car_marks.id = auto_adverts.car_mark_id")
+		.joins("LEFT OUTER JOIN car_models \
+						ON car_models.id = auto_adverts.car_model_id")
+		.limit(5)
+		.order("auto_adverts.id DESC")
+	end
+
 	def self.all_new
 		self.where({is_new: true})
 	end
