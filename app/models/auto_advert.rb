@@ -24,37 +24,38 @@ class AutoAdvert < ActiveRecord::Base
 
 	# Создает запрос where по переданному фильтру
 	def self.filter(f)
+		f ||= {}
 		where_strings = []
 		where_params = {}
 
-		if f.car_mark_id
+		if f[:car_mark_id]
 			where_strings << "car_mark_id = :car_mark_id"
-			where_params[:car_mark_id] = f.car_mark_id
+			where_params[:car_mark_id] = f[:car_mark_id]
 		end
 
-		if f.car_model_id
+		if f[:car_model_id]
 			where_strings << "car_model_id = :car_model_id"
-			where_params[:car_model_id] = f.car_model_id
+			where_params[:car_model_id] = f[:car_model_id]
 		end
 
-		if f.min_year
+		if f[:min_year]
 			where_strings << "year >= :min_year"
-			where_params[:min_year] = f.min_year
+			where_params[:min_year] = f[:min_year]
 		end
 
-		if f.max_year
+		if f[:max_year]
 			where_strings << "year <= :max_year"
-			where_params[:max_year] = f.max_year
+			where_params[:max_year] = f[:max_year]
 		end
 
-		if f.min_price
+		if f[:min_price]
 			where_strings << "price >= :min_price"
-			where_params[:min_price] = f.min_price
+			where_params[:min_price] = f[:min_price]
 		end
 
-		if f.max_price
+		if f[:max_price]
 			where_strings << "price <= :max_price"
-			where_params[:max_price] = f.max_price
+			where_params[:max_price] = f[:max_price]
 		end
 
 		self.where(where_strings.join(" AND "), where_params)

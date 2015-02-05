@@ -43,6 +43,14 @@ class AutoFilter < ActiveRecord::Base
 	end
 
 	def find_new_adverts
-		AutoAdvert.filter(self).all_new
+		AutoAdvert.filter(self.attributes_for_advert).all_new
+	end
+
+	def attributes_for_advert
+		attrs = {}
+		self.attributes.each do |key, value|
+			attrs[key.to_sym] = value
+		end
+		attrs
 	end
 end

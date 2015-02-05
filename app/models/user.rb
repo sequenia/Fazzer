@@ -12,6 +12,23 @@ class User < ActiveRecord::Base
 
   has_many :auto_filters
  
+  def update_filter(f)
+    f ||= {}
+    filter = first_filter
+    if filter.nil?
+      filter = AutoFilter.create({user_id: self.id})
+    end
+
+    attrs = {}
+    AutoFilter.columns.each do |c|
+      name = c.name
+      if name != "created_at" && name != "updated_at" && name != "user_id" && name != "id"
+        attrs[name] = f[name.to_sym]
+      end
+    end
+    filter.update_attributes(attrs)
+  end
+
   def first_filter
     auto_filters.first
   end
