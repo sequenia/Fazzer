@@ -18,6 +18,6 @@ class Api::V1::AutoAdvertsController < ApplicationController
     render :status => 200,
            :json => { :success => true,
                       :info => "ok",
-                      :data => { auto_advert: AutoAdvert.get_full_info.where({id: params[:id]}) } }
+                      :data => { auto_advert: AutoAdvert.get_full_info.where({id: params[:id]}).first } }
   end
 end
