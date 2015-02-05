@@ -11,6 +11,6 @@ class Api::V1::AutoAdvertsController < ApplicationController
     render :status => 200,
            :json => { :success => true,
                       :info => "ok",
-                      :data => { auto_adverts: AutoAdvert.get_min_info } }
+                      :data => { auto_adverts: AutoAdvert.get_min_info.filter(current_user.first_filter).limit(5) } }
   end
 end

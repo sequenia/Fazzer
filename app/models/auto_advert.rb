@@ -9,22 +9,90 @@ class AutoAdvert < ActiveRecord::Base
 	enum transmission: [:manual, :automatic]
 	enum body: [:sedan, :jeep, :hatchback, :estate, :van, :coupe, :open, :pickup]
 
+	# Возвращает минимальную информацию об объявлениях
 	def self.get_min_info
-		self.select("auto_adverts.id, auto_adverts.year, auto_adverts.price,\
-			auto_adverts.car_mark_id, car_marks.name AS car_mark_name, \
-			auto_adverts.car_model_id, car_models.name AS car_model_name")
-		.joins("LEFT OUTER JOIN car_marks \
-						ON car_marks.id = auto_adverts.car_mark_id")
-		.joins("LEFT OUTER JOIN car_models \
-						ON car_models.id = auto_adverts.car_model_id")
-		.limit(5)
+		self.select_with_fields([:id, :year, :price,
+														 :car_mark_id, :car_model_id,
+														 :car_mark_name, :car_model_name])
 		.order("auto_adverts.id DESC")
 	end
 
+	# Создает запрос where по переданному фильтру
+	def self.filter(f)
+		where_strings = []
+		where_params = {}
+
+		if f.car_mark_id
+			where_strings << "car_mark_id = :car_mark_id"
+			where_params[:car_mark_id] = f.car_mark_id
+		end
+
+		if f.car_model_id
+			where_strings << "car_model_id = :car_model_id"
+			where_params[:car_model_id] = f.car_model_id
+		end
+
+		if f.min_year
+			where_strings << "year >= :min_year"
+			where_params[:min_year] = f.min_year
+		end
+
+		if f.max_year
+			where_strings << "year <= :max_year"
+			where_params[:max_year] = f.max_year
+		end
+
+		if f.min_price
+			where_strings << "price >= :min_price"
+			where_params[:min_price] = f.min_price
+		end
+
+		if f.max_price
+			where_strings << "price <= :max_price"
+			where_params[:max_price] = f.max_price
+		end
+
+		self.where(where_strings.join(" AND "), where_params)
+	end
+
+	# Возвращает запрос к БД с указанными полями.
+	# Если полей не указано, возвращается all
+	def self.select_with_fields(fields)
+		query = nil
+		select_strings = []
+		joins_strings = []
+
+		if fields.class == Array
+			# Генерируем части запроса для полей и джоинов
+			fields.each do |field|
+				field_name = field.to_s
+				if field_name == "car_model_name"
+					select_strings << "car_models.name AS car_model_name"
+					joins_strings << "LEFT OUTER JOIN car_models ON car_models.id = auto_adverts.car_model_id"
+				elsif field_name == "car_mark_name"
+					select_strings << "car_marks.name AS car_mark_name"
+					joins_strings << "LEFT OUTER JOIN car_marks ON car_marks.id = auto_adverts.car_mark_id"
+				else
+					select_strings << "auto_adverts.#{field_name}"
+				end
+			end
+		else
+			select_strings << "*"
+		end
+
+		query = self.select(select_strings.join(", "))
+		joins_strings.each { |j|query = query.joins(j) }
+
+		query
+	end
+
+	# Возвращает все новые объявления
 	def self.all_new
 		self.where({is_new: true})
 	end
 
+	# Создает объявление в БД по информации со страницы.
+	# Эта информация может включать в себя русские слова и русские ключи.
 	def self.create_from_info(info)
 		return nil if info.nil?
 		return nil if info[:code].nil?
@@ -71,6 +139,7 @@ class AutoAdvert < ActiveRecord::Base
 
 	private
 
+		# Возвращает значение enum для fuel по русскому слову
 		def self.convert_fuel(text)
 			return nil if text.nil?
 
@@ -83,6 +152,7 @@ class AutoAdvert < ActiveRecord::Base
 			end
 		end
 
+		# Возвращает значение enum для руля по русскому слову
 		def self.convert_steering_wheel(text)
 			return nil if text.nil?
 
@@ -95,6 +165,7 @@ class AutoAdvert < ActiveRecord::Base
 			end
 		end
 
+		# Возвращает значение enum для drive по русскому слову
 		def self.convert_drive(text)
 			return nil if text.nil?
 
@@ -109,6 +180,7 @@ class AutoAdvert < ActiveRecord::Base
 			end
 		end
 
+		# Возвращает значение enum для transmission по русскому слову
 		def self.convert_transmission(text)
 			return nil if text.nil?
 
@@ -121,6 +193,7 @@ class AutoAdvert < ActiveRecord::Base
 			end
 		end
 
+		# Возвращает значение enum для body по русскому слову
 		def self.convert_body(text)
 			return nil if text.nil?
 

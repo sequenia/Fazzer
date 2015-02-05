@@ -9,7 +9,13 @@ class User < ActiveRecord::Base
   before_save :ensure_authentication_token
 
   validates :phone, :presence => true, :uniqueness => { :case_sensitive => false }
+
+  has_many :auto_filters
  
+  def first_filter
+    auto_filters.first
+  end
+
   def email_required?
     false
   end

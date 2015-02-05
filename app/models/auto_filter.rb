@@ -1,6 +1,7 @@
 class AutoFilter < ActiveRecord::Base
 	belongs_to :car_mark
 	belongs_to :car_model
+	belongs_to :user
 
 	def self.check_new_adverts
 		puts "Try to find adverts to filters..."
@@ -42,42 +43,6 @@ class AutoFilter < ActiveRecord::Base
 	end
 
 	def find_new_adverts
-		where_strings = []
-		where_params = {}
-
-		if self.car_mark_id
-			where_strings << "car_mark_id = :car_mark_id"
-			where_params[:car_mark_id] = self.car_mark_id
-		end
-
-		if self.car_model_id
-			where_strings << "car_model_id = :car_model_id"
-			where_params[:car_model_id] = self.car_model_id
-		end
-
-		if self.min_year
-			where_strings << "year >= :min_year"
-			where_params[:min_year] = self.min_year
-		end
-
-		if self.max_year
-			where_strings << "year <= :max_year"
-			where_params[:max_year] = self.max_year
-		end
-
-		if self.min_price
-			where_strings << "price >= :min_price"
-			where_params[:min_price] = self.min_price
-		end
-
-		if self.max_price
-			where_strings << "price <= :max_price"
-			where_params[:max_price] = self.max_price
-		end
-
-		where_strings << "is_new = :is_new"
-		where_params[:is_new] = true
-
-		AutoAdvert.where(where_strings.join(" AND "), where_params)
+		AutoAdvert.filter(self).all_new
 	end
 end
