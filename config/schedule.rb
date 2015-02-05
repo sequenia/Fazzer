@@ -24,3 +24,15 @@ set :output, "/var/www/log/cron_log.log"
 every :day, :at => '10:10am' do
   runner "AutoParser.new.save_last_adverts"
 end
+
+every :day, :at => '4:10pm' do
+  runner "AutoParser.new.save_last_adverts"
+end
+
+every :day, :at => '10:10pm' do
+  runner "AutoParser.new.save_last_adverts"
+end
+
+every :day, :at => '4:10am' do
+  runner "AutoParser.new.save_last_adverts"
+end
