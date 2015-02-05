@@ -17,6 +17,11 @@ class AutoAdvert < ActiveRecord::Base
 		.order("auto_adverts.id DESC")
 	end
 
+	def self.get_full_info
+		self.select_with_fields(AutoAdvert.columns.collect{ |c| c.name }
+													  .concat([:car_mark_name, :car_model_name, :city_name]))
+	end
+
 	# Создает запрос where по переданному фильтру
 	def self.filter(f)
 		where_strings = []
@@ -72,6 +77,9 @@ class AutoAdvert < ActiveRecord::Base
 				elsif field_name == "car_mark_name"
 					select_strings << "car_marks.name AS car_mark_name"
 					joins_strings << "LEFT OUTER JOIN car_marks ON car_marks.id = auto_adverts.car_mark_id"
+				elsif field_name == "city_name"
+					select_strings << "cities.name AS city_name"
+					joins_strings << "LEFT OUTER JOIN cities ON cities.id = auto_adverts.city_id"
 				else
 					select_strings << "auto_adverts.#{field_name}"
 				end
