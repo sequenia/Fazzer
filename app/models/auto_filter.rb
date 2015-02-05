@@ -3,6 +3,8 @@ class AutoFilter < ActiveRecord::Base
 	belongs_to :car_model
 	belongs_to :user
 
+	# Для каждого пользовательского фильтра ищет подходящие новые объявления,
+	# и производит рассылку о них.
 	def self.check_new_adverts
 		puts "Try to find adverts to filters..."
 		AutoFilter.where("email IS NOT NULL").each do |filter|
