@@ -12,6 +12,9 @@ Fazzer::Application.routes.draw do
 
       resources :auto_adverts, only: [:index, :show]
       resources :auto_filters, only: [:create]
+      resources :car_marks, only: [:index]
+      resources :car_models, only: [:index]
+      resources :cities, only: [:index]
       #get 'auto_adverts' => 'auto_adverts#index', :as => 'auto_adverts'
       #get 'auto_adverts' => 'auto_adverts#index', :as => 'auto_adverts'
     end
