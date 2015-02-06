@@ -13,7 +13,6 @@ class Api::V1::AutoAdvertsController < ApplicationController
            :json => { :success => true,
                       :info => "ok",
                       :data => AutoAdvert.get_min_info.filter(current_user.first_filter.attributes_for_advert).limit(5) }
-    # AutoAdvert.get_min_info.filter(params[:filter]).limit(5)
   end
 
   # Отдает полную информацию об объявлении по переданному id

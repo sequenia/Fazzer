@@ -7,6 +7,28 @@ class Api::V1::AutoFiltersController < ApplicationController
   respond_to :json
 
   def create
-    current_user.update_or_create_filter(params)
+    filter = current_user.update_or_create_filter(filter_params)
+    response = {}
+
+    if filter
+      response = {
+        :success => true,
+        :info => "ok"
+      }
+    else
+      response = {
+        :success => false,
+        :info => filter.error
+      }
+    end
+
+    render :status => 200,
+           :json => response
   end
+
+  private
+
+    def filter_params
+      params.require(:auto_filter).permit(:car_mark_id, :car_model_id, :min_price, :max_price, :min_year, :max_year)
+    end
 end
