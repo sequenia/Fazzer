@@ -11,28 +11,29 @@ class User < ActiveRecord::Base
   validates :phone, :presence => true, :uniqueness => { :case_sensitive => false }
 
   has_many :auto_filters
- 
-  def update_filter(f)
+  
+  # Обновляет фильтр по переданным параметрам
+  def update_or_create_filter(params)
     f ||= {}
-    filter = first_filter
-    if filter.nil?
-      filter = AutoFilter.create({user_id: self.id})
-    end
 
-    attrs = {}
-    AutoFilter.columns.each do |c|
-      name = c.name
-      if name != "created_at" && name != "updated_at" && name != "user_id" && name != "id"
-        attrs[name] = f[name.to_sym]
-      end
-    end
-    filter.update_attributes(attrs)
+    delete_first_filter
+    AutoFilter.create(params.merge({user_id: self.id}))
   end
 
+  # Возвращает первый фильтр пользователя (и пока что единственный)
   def first_filter
     auto_filters.first
   end
 
+  # Удаляет первый фильтр пользователя (И пока что единственный)
+  def delete_first_filter
+    filter = first_filter
+    filter.destroy if filter
+  end
+
+  #########################################################################
+  ## Реализация механизма авторизации
+  #########################################################################
   def email_required?
     false
   end

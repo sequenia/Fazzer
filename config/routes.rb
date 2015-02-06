@@ -11,6 +11,7 @@ Fazzer::Application.routes.draw do
       end
 
       resources :auto_adverts, only: [:index, :show]
+      resources :auto_filters, only: [:create]
       #get 'auto_adverts' => 'auto_adverts#index', :as => 'auto_adverts'
       #get 'auto_adverts' => 'auto_adverts#index', :as => 'auto_adverts'
     end
