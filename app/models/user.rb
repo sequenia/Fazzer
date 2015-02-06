@@ -14,10 +14,22 @@ class User < ActiveRecord::Base
   
   # Обновляет фильтр по переданным параметрам
   def update_or_create_filter(params)
-    f ||= {}
+    #delete_first_filter
+    #AutoFilter.create(params.merge({user_id: self.id}))
 
-    delete_first_filter
-    AutoFilter.create(params.merge({user_id: self.id}))
+    filter = first_filter
+    if filter.nil?
+      filter = AutoFilter.create({user_id: self.id})
+    end
+
+    attrs = {}
+    AutoFilter.columns.each do |c|
+      name = c.name
+      if name != "created_at" && name != "updated_at" && name != "user_id" && name != "id"
+        attrs[name] = params[name.to_sym]
+      end
+    end
+    filter.update_attributes(attrs)
   end
 
   # Возвращает первый фильтр пользователя (и пока что единственный)
