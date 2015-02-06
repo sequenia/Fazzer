@@ -12,7 +12,7 @@ class Api::V1::AutoAdvertsController < ApplicationController
     render :status => 200,
            :json => { :success => true,
                       :info => "ok",
-                      :data => { auto_adverts: AutoAdvert.get_min_info.filter(current_user.first_filter.attributes_for_advert).limit(5) } }
+                      :data => AutoAdvert.get_min_info.filter(current_user.first_filter.attributes_for_advert).limit(5) }
     # AutoAdvert.get_min_info.filter(params[:filter]).limit(5)
   end
 
@@ -21,6 +21,6 @@ class Api::V1::AutoAdvertsController < ApplicationController
     render :status => 200,
            :json => { :success => true,
                       :info => "ok",
-                      :data => { auto_advert: AutoAdvert.get_full_info.where({id: params[:id]}).first } }
+                      :data => AutoAdvert.get_full_info.where({id: params[:id]}).first }
   end
 end
