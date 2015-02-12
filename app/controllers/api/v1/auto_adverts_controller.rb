@@ -9,10 +9,11 @@ class Api::V1::AutoAdvertsController < ApplicationController
   # Отдает 5 последних объявлений, подходящих под фильтр params[:filter].
   # Если params[:update_filter] не пустой, то фильтр пользователя обновится.
   def index
+    filter = current_user.first_filter
     render :status => 200,
            :json => { :success => true,
                       :info => "ok",
-                      :data => AutoAdvert.get_min_info.filter(current_user.first_filter.attributes_for_advert).limit(5) }
+                      :data => filter.nil? ? [] : AutoAdvert.get_min_info.filter(current_user.first_filter.attributes_for_advert).limit(5) }
   end
 
   # Отдает полную информацию об объявлении по переданному id

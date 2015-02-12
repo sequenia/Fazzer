@@ -14,9 +14,6 @@ class User < ActiveRecord::Base
   
   # Обновляет фильтр по переданным параметрам
   def update_or_create_filter(params)
-    #delete_first_filter
-    #AutoFilter.create(params.merge({user_id: self.id}))
-
     filter = first_filter
     if filter.nil?
       filter = AutoFilter.create({user_id: self.id})
@@ -35,12 +32,6 @@ class User < ActiveRecord::Base
   # Возвращает первый фильтр пользователя (и пока что единственный)
   def first_filter
     auto_filters.first
-  end
-
-  # Удаляет первый фильтр пользователя (И пока что единственный)
-  def delete_first_filter
-    filter = first_filter
-    filter.destroy if filter
   end
 
   #########################################################################

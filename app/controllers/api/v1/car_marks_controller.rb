@@ -12,4 +12,11 @@ class Api::V1::CarMarksController < ApplicationController
                       :info => "ok",
                       :data => CarMark.select("id, name") }
   end
+
+  def version
+    render :status => 200,
+           :json => { :success => true,
+                      :info => "ok",
+                      :data => Version.first.car_marks }
+  end
 end

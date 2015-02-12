@@ -12,4 +12,11 @@ class Api::V1::CitiesController < ApplicationController
                       :info => "ok",
                       :data => City.select("id, name") }
   end
+
+  def version
+    render :status => 200,
+           :json => { :success => true,
+                      :info => "ok",
+                      :data => Version.first.cities }
+  end
 end

@@ -5,14 +5,16 @@ class Api::V1::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 
   def create
-    build_resource(sign_up_params)
+    password = random_password
+    build_resource(sign_up_params.merge({
+      password: password,
+      password_confirmation: password
+    }))
     if resource.save
-      sign_in resource
       render :status => 200,
            :json => { :success => true,
-                      :info => "Registered",
-                      :data => { :user => resource,
-                                 :auth_token => current_user.authentication_token } }
+                      :info => "Код отправлен",
+                      :data => { :user => resource } }
     else
       render :status => :unprocessable_entity,
              :json => { :success => false,
@@ -22,6 +24,10 @@ class Api::V1::RegistrationsController < Devise::RegistrationsController
   end
 
   private
+
+    def random_password
+      "12345678"
+    end
 
     def sign_up_params
       devise_parameter_sanitizer.sanitize(:sign_up)
