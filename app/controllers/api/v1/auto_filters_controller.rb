@@ -7,7 +7,9 @@ class Api::V1::AutoFiltersController < ApplicationController
   respond_to :json
 
   def create
-    filter = current_user.update_or_create_filter(filter_params)
+    # Разрешаем пустые параметры
+    parameters = (params[:auto_filter] || {}).empty? ? {} : filter_params
+    filter = current_user.update_or_create_filter(parameters)
     response = {}
 
     if filter
