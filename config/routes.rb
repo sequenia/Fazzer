@@ -15,6 +15,7 @@ Fazzer::Application.routes.draw do
       resources :car_marks, only: [:index]
       resources :car_models, only: [:index]
       resources :cities, only: [:index]
+      resources :devices, only: [:create]
 
       get 'cities_version' => 'cities#version', :as => 'cities_version'
       get 'car_marks_version' => 'car_marks#version', :as => 'car_marks_version'
