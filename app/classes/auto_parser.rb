@@ -67,6 +67,7 @@ class AutoParser < DromParser
 
 		page_index = 1
 		while save_adverts_from_page(region_href + "page#{page_index}", stop_on)
+			sleep 5
 			ParserMessenger.say_about_region_page_parsed(page_index, region_href)
 			page_index += 1
 		end
