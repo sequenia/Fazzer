@@ -65,11 +65,16 @@ class AutoParser < DromParser
 	def save_last_region_adverts(region_href, stop_on)
 		ParserMessenger.say_about_region_parsing(region_href)
 
+		session = new_session
+		DromParser.set_region(session)
+
 		page_index = 1
-		while save_adverts_from_page(region_href + "page#{page_index}", stop_on)
+		while save_adverts_from_page(region_href + "page#{page_index}", stop_on, session)
 			ParserMessenger.say_about_region_page_parsed(page_index, region_href)
 			page_index += 1
 		end
+
+		session.driver.quit
 
 		ParserMessenger.say_about_region_parsing_end(region_href)
 	end
@@ -79,19 +84,16 @@ class AutoParser < DromParser
 	# true, если можно продолжать.
 	#
 	# stop_on = ['first_pinned_existed'|'first_pinned_not_existed'|'first_upped_existed'|'first_upped_not_existed'|'first_default_existed'|'first_default_not_existed']
-	def save_adverts_from_page(page_href, stop_on)
+	def save_adverts_from_page(page_href, stop_on, session)
 		sleep 5
 
 		stop_on ||= @@save_types[:first_default_existed]
-
-		session = new_session
 
 		if DromParser.visit_page(session, page_href)
 			page = Nokogiri::HTML.parse(session.html)
 			ParserMessenger.say_about_adverts_table_parsing(page_href)
 			adverts_table = get_adverts_table(page)
 			ParserMessenger.print_adverts_table(adverts_table)
-			session.driver.quit
 
 			if adverts_table.size == 0
 				ParserMessenger.say_about_no_adverts(page_href)

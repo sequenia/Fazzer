@@ -45,6 +45,31 @@ class DromParser
 		return result
 	end
 
+	def self.set_region(session)
+		region = DromParser.get_random_region_number
+		puts "Setting region #{region}"
+
+		attempts = 0
+		max_attempts = 5
+		result = nil
+
+		while true
+			begin
+				session.visit "http://www.drom.ru/my_region/?set_region=#{region}"
+				result = true
+				break
+			rescue Capybara::Poltergeist::TimeoutError => ex
+				ParserMessenger.print_exception(ex)
+				attempts += 1
+			rescue Exception => ex
+				ParserMessenger.print_exception(ex)
+				attempts += 1
+			end
+		end
+
+		return result
+	end
+
 	def self.strip(str1, str2)
 		str1.gsub(/\A[#{str2}]+|[#{str2}]+\Z/, "")
 	end
@@ -143,6 +168,11 @@ class DromParser
 		]
 
 		return user_agents.sample
+	end
+
+	def self.get_random_region_number
+		numbers = ['22', '28', '29', '30', '31', '32', '33', '34', '41', '9', '50', '51', '1', '2', '3', '4', '5', '6', '10', '11', '54']
+		return numbers.sample
 	end
 
 	def self.get_regions
