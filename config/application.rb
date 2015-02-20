@@ -13,6 +13,7 @@ module Fazzer
       Capybara::Poltergeist::Driver.new(app, :phantomjs => Phantomjs.path, :phantomjs_options => ["--proxy=localhost:9050", "--proxy-type=socks5"])
     end
 
+    Capybara.javascript_driver = :poltergeist
     Capybara.default_driver = :poltergeist
 
     Capybara.ignore_hidden_elements = false

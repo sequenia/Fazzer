@@ -6,6 +6,7 @@ class AutoAdvertParser < DromParser
 	@@advert_data_selector = "#{@@advert_text_selector} p span.label"      # Контейнер с данными объяления
 	@@advert_contacts_selector = "#{@@advert_text_selector} p#contactsEx"  # Контейрер с 
 	@@path_part_selector = "div.path a"                                    # Ссылки с маркой и моделью
+	@@photo_selector = "a.bigImage img"                                    # Фотография
 
 	@@phone_visible_class = "contactsExVisible"                            # Класс видимого телефона
 	@@show_phones_link_text = "Показать телефон"                           # Текст на ссылке телефона
@@ -14,6 +15,8 @@ class AutoAdvertParser < DromParser
 	@@engine_key = "Двигатель:"
 	@@class_attribute = "class"
 	@@span_selector = "span"
+	@@src_attribute = "src"
+	@@another_src_attribute = "srctemp"
 
 	def get_info(href)
 		session = new_session
@@ -30,6 +33,7 @@ class AutoAdvertParser < DromParser
 					model: get_model(page),
 					year: get_year(page),
 					price: get_price(page),
+					photo_url: get_photo_url(page),
 					phones: []
 				}
 
@@ -149,5 +153,15 @@ class AutoAdvertParser < DromParser
 
 		def get_price(page)
 			get_data(page, @@advert_price_selector, /(\d[\u00a0\s\d]*\d)[\s\u00a0]*руб./).gsub(/[\s\u00a0]+/, "").to_f
+		end
+
+		def get_photo_url(page)
+			img = page.at_css(@@photo_selector)
+			if img
+				src = img.attribute(@@src_attribute) || img.attribute(@@another_src_attribute)
+				if src
+					src.value
+				end
+			end
 		end
 end

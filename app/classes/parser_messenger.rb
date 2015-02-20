@@ -33,7 +33,7 @@ class ParserMessenger
 	end
 
 	def self.print_adverts_table(adverts_table)
-		puts "Adverts: #{adverts_table.collect{ |a| a[:code] }.join(", ")}"
+		puts "Adverts: #{adverts_table.collect{ |a| a[:code] + " " + a[:type] }.join(", ")}"
 	end
 
 	def self.say_about_no_adverts(page_href)
@@ -44,8 +44,8 @@ class ParserMessenger
 		puts "Advert already exists: #{advert[:code]}"
 	end
 
-	def self.say_about_stop_region_parsing(stop_on)
-		puts "STOP! Stop on #{stop_on}"
+	def self.say_about_stop_region_parsing(stop_on, advert)
+		puts "STOP! Stop on #{stop_on}. Advert: #{advert}"
 	end
 
 	def self.say_about_advert_parsing(advert, page_href)

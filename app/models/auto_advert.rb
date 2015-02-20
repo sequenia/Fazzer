@@ -111,6 +111,7 @@ class AutoAdvert < ActiveRecord::Base
 			date: info[:date],
 			year: info[:year],
 			price: info[:price],
+			photo_url: info[:photo_url],
 			phone: (info[:phones] || []).join(", "),
 			fuel: self.convert_fuel(info[:fuel]),
 			displacement: info[:displacement],

@@ -7,6 +7,8 @@ class AutoParser < DromParser
 	@@advert_id_attribute = "data-bull-id"
 	@@class_attribute = "class"
 	@@img_selector = "img"
+	@@pinned_attribute = "data-is-sticky"
+	@@upped_attribute = "data-is-up"
 
 	# Порядок колонок в таблице объявлений
 	@@adverts_table_columns = {
@@ -104,7 +106,7 @@ class AutoParser < DromParser
 			if exists
 				ParserMessenger.say_about_existed_advert(advert)
 				if needs_stop_if_exists(advert, stop_on)
-					ParserMessenger.say_about_stop_region_parsing(stop_on)
+					ParserMessenger.say_about_stop_region_parsing(stop_on, advert)
 					return false
 				end
 			else
@@ -114,7 +116,7 @@ class AutoParser < DromParser
 				AutoAdvert.create_from_info(info)
 
 				if needs_stop_if_not_exists(advert, stop_on)
-					ParserMessenger.say_about_stop_region_parsing(stop_on)
+					ParserMessenger.say_about_stop_region_parsing(stop_on, advert)
 					return false
 				end
 			end
@@ -154,18 +156,28 @@ class AutoParser < DromParser
 				model: DromParser.strip(columns[@@adverts_table_columns[:model]].text, " \n"),
 				href: columns[@@adverts_table_columns[:date]].css(@@a_selector).first[@@href_attribute_selector],
 				code: advert.attribute(@@advert_id_attribute).value,
-				type: get_advert_type(columns[@@adverts_table_columns[:date]])
+				type: get_advert_type(advert)
 			}
 		end
 	end
 
 	# default, pinned, upped
-	def get_advert_type(date_column)
-		image = date_column.at_css(@@img_selector)
-		if image
-			image[@@class_attribute]
+	def get_advert_type(advert_row)
+		upped = advert_row.attribute(@@upped_attribute)
+		pinned = advert_row.attribute(@@pinned_attribute)
+
+		if pinned
+			if pinned.value.to_i > 0
+				return @@advert_types[:pinned]
+			end
 		else
-			return @@advert_types[:default]
+			if upped
+				if upped.value.to_i > 0
+					return @@advert_types[:upped]
+				end
+			end
 		end
+
+		return @@advert_types[:default]
 	end
 end
