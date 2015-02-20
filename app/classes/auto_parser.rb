@@ -67,7 +67,6 @@ class AutoParser < DromParser
 
 		page_index = 1
 		while save_adverts_from_page(region_href + "page#{page_index}", stop_on)
-			sleep 5
 			ParserMessenger.say_about_region_page_parsed(page_index, region_href)
 			page_index += 1
 		end
@@ -81,6 +80,8 @@ class AutoParser < DromParser
 	#
 	# stop_on = ['first_pinned_existed'|'first_pinned_not_existed'|'first_upped_existed'|'first_upped_not_existed'|'first_default_existed'|'first_default_not_existed']
 	def save_adverts_from_page(page_href, stop_on)
+		sleep 5
+
 		stop_on ||= @@save_types[:first_default_existed]
 
 		session = new_session
