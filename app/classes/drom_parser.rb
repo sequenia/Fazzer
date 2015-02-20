@@ -6,8 +6,8 @@ class DromParser
 	include Capybara::DSL
 
 	# Новая сессия
-	def new_session
-		session = Capybara::Session.new(:poltergeist)
+	def new_session(driver = :poltergeist)
+		session = Capybara::Session.new(driver)
 
 		session.driver.headers = { 'User-Agent' =>
 			DromParser.random_desktop_user_agent }
