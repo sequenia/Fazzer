@@ -10,7 +10,7 @@ module Fazzer
   class Application < Rails::Application
 
     Capybara.register_driver :poltergeist do |app|
-      Capybara::Poltergeist::Driver.new(app, :phantomjs => Phantomjs.path, :phantomjs_options => ["--proxy=localhost:9050", "--proxy-type=socks5"])
+      Capybara::Poltergeist::Driver.new(app, js_errors: false, :phantomjs => Phantomjs.path, :phantomjs_options => ["--proxy=localhost:9050", "--proxy-type=socks5"])
     end
 
     Capybara.javascript_driver = :poltergeist
