@@ -25,6 +25,8 @@ class AutoAdvertParser < DromParser
 			page = Nokogiri::HTML.parse(session.html)
 
 			if !page.at_css(@@advert_text_selector).nil?
+				photo_url = PhotosLoader.new.get_photo_url(page)
+				photo_preview_url = PhotosLoader.new.get_photo_preview_url(photo_url, page)
 				info = {
 					code: get_code(page),
 					url: href,
@@ -33,7 +35,9 @@ class AutoAdvertParser < DromParser
 					model: get_model(page),
 					year: get_year(page),
 					price: get_price(page),
-					photo_url: get_photo_url(page),
+					photo_url: photo_url,
+					photo_preview_url: photo_preview_url,
+					photos_processed: true,
 					phones: []
 				}
 
@@ -153,15 +157,5 @@ class AutoAdvertParser < DromParser
 
 		def get_price(page)
 			get_data(page, @@advert_price_selector, /(\d[\u00a0\s\d]*\d)[\s\u00a0]*руб./).gsub(/[\s\u00a0]+/, "").to_f
-		end
-
-		def get_photo_url(page)
-			img = page.at_css(@@photo_selector)
-			if img
-				src = img.attribute(@@src_attribute) || img.attribute(@@another_src_attribute)
-				if src
-					src.value
-				end
-			end
 		end
 end

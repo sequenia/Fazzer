@@ -13,7 +13,7 @@ class AutoAdvert < ActiveRecord::Base
 	def self.get_min_info
 		self.select_with_fields([:id, :year, :price,
 			:car_mark_id, :car_model_id,
-			:car_mark_name, :car_model_name, :photo_url])
+			:car_mark_name, :car_model_name, :photo_preview_url])
 		.order("auto_adverts.id DESC")
 	end
 
@@ -112,6 +112,8 @@ class AutoAdvert < ActiveRecord::Base
 			year: info[:year],
 			price: info[:price],
 			photo_url: info[:photo_url],
+			photo_preview_url: info[:photo_preview_url],
+			photos_processed: info[:photos_processed],
 			phone: (info[:phones] || []).join(", "),
 			fuel: self.convert_fuel(info[:fuel]),
 			displacement: info[:displacement],
