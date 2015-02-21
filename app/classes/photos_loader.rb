@@ -4,7 +4,7 @@ class PhotosLoader < DromParser
 	@@another_src_attribute = "srctemp"
 
 	def load_photos
-		AutoAdvert.where(photo_url: nil).where.not(url: nil).order("id").each do |advert|
+		AutoAdvert.where(photo_url: nil).where.not(url: nil).order("id DESC").each do |advert|
 			session = new_session
 			if DromParser.visit_page(session, advert.url)
 				page = Nokogiri::HTML.parse(session.html)

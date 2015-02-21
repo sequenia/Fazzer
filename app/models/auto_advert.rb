@@ -12,14 +12,14 @@ class AutoAdvert < ActiveRecord::Base
 	# Возвращает минимальную информацию об объявлениях
 	def self.get_min_info
 		self.select_with_fields([:id, :year, :price,
-														 :car_mark_id, :car_model_id,
-														 :car_mark_name, :car_model_name])
+			:car_mark_id, :car_model_id,
+			:car_mark_name, :car_model_name, :photo_url])
 		.order("auto_adverts.id DESC")
 	end
 
 	def self.get_full_info
 		self.select_with_fields(AutoAdvert.columns.collect{ |c| c.name }
-													  .concat([:car_mark_name, :car_model_name, :city_name]))
+			.concat([:car_mark_name, :car_model_name, :city_name]))
 	end
 
 	# Создает запрос where по переданному фильтру
