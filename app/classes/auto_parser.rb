@@ -48,6 +48,7 @@ class AutoParser < DromParser
 		ParserMessenger.about_parsing_start
 		DromParser.get_regions.each do |region|
 			AutoParser.new.save_last_region_adverts(region, @@save_types[:first_default_not_existed])
+			AutoFilter.check_new_adverts
 		end
 	end
 
