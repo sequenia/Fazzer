@@ -10,7 +10,8 @@ class User < ActiveRecord::Base
 
   validates :phone, :presence => true, :uniqueness => { :case_sensitive => false }
 
-  has_many :auto_filters
+  has_many :auto_filters, dependent: :destroy
+  has_many :devices, dependent: :destroy
   
   # Обновляет фильтр по переданным параметрам
   def update_or_create_filter(params)
