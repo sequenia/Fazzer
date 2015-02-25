@@ -31,6 +31,6 @@ class Api::V1::AutoFiltersController < ApplicationController
   private
 
     def filter_params
-      params.require(:auto_filter).permit(:car_mark_id, :car_model_id, :min_price, :max_price, :min_year, :max_year)
+      params.require(:auto_filter).permit(:car_mark_id, :car_model_id, :min_price, :max_price, :min_year, :max_year, :city_id)
     end
 end

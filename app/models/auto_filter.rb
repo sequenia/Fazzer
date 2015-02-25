@@ -2,6 +2,7 @@ class AutoFilter < ActiveRecord::Base
 	belongs_to :car_mark
 	belongs_to :car_model
 	belongs_to :user
+	belongs_to :city
 
 	# Для каждого пользовательского фильтра ищет подходящие новые объявления,
 	# и производит рассылку о них.
@@ -18,13 +19,17 @@ class AutoFilter < ActiveRecord::Base
 					min_price: filter.min_price,
 					max_price: filter.max_price,
 				}
-				car_model = filter.car_model
-				car_mark = filter.car_mark
-				if car_model
-					filter_attrs[:car_model_name] = car_model.name
+				filter_car_model = filter.car_model
+				filter_car_mark = filter.car_mark
+				filter_city = filter.city
+				if filter_car_model
+					filter_attrs[:car_model_name] = filter_car_model.name
 				end
-				if car_mark
-					filter_attrs[:car_mark_name] = car_mark.name
+				if filter_car_mark
+					filter_attrs[:car_mark_name] = filter_car_mark.name
+				end
+				if filter_city
+					filter_attrs[:city_name] = filter_city.name
 				end
 
 				FazzerMailer.new_adverts_message(

@@ -28,13 +28,18 @@ class AutoAdvert < ActiveRecord::Base
 		where_strings = []
 		where_params = {}
 
+		if f[:city_id]
+			where_strings << "auto_adverts.city_id = :city_id"
+			where_params[:city_id] = f[:city_id]
+		end
+
 		if f[:car_mark_id]
-			where_strings << "car_mark_id = :car_mark_id"
+			where_strings << "auto_adverts.car_mark_id = :car_mark_id"
 			where_params[:car_mark_id] = f[:car_mark_id]
 		end
 
 		if f[:car_model_id]
-			where_strings << "car_model_id = :car_model_id"
+			where_strings << "auto_adverts.car_model_id = :car_model_id"
 			where_params[:car_model_id] = f[:car_model_id]
 		end
 
