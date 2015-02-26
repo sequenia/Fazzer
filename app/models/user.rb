@@ -28,6 +28,7 @@ class User < ActiveRecord::Base
       end
     end
     filter.update_attributes(attrs)
+    filter
   end
 
   # Возвращает первый фильтр пользователя (и пока что единственный)

@@ -10,13 +10,13 @@ class AutoFilter < ActiveRecord::Base
 		puts "Try to find adverts to filters..."
 		AutoFilter.all.each do |filter|
 			adverts = filter.find_new_adverts
-			device = Device.where({user_id: filter.user_id}).first
+			device = Device.where({user_id: filter.user_id, enabled: true}).first
 			puts "Found #{adverts.size} adverts for filter #{filter.id}"
 
 			adverts_count = adverts.size
 			if adverts_count > 0
 				if device.nil?
-					puts "Can not find device for filter #{filter.id}"
+					puts "Device for filter #{filter.id} not found or not active"
 				else
 					puts adverts.first.id
 					puts "Sending notofication to device #{device.id} of user #{filter.user_id}"
