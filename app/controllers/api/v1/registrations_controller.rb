@@ -27,7 +27,7 @@ class Api::V1::RegistrationsController < Devise::RegistrationsController
   private
 
     def send_sms(phone, password)
-      api_id = "05460884-7559-8db4-8d7b-ccf7103c01ed"
+      api_id = ENV["SMS_API_ID"]
       text = URI.encode("Код для входа: #{password}")
       uri = URI("http://sms.ru/sms/send?api_id=#{api_id}&to=#{phone}&text=#{text}")
       Net::HTTP.get(uri)
