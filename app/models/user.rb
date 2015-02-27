@@ -6,9 +6,14 @@ class User < ActiveRecord::Base
          # :trackable,
          :validatable
 
+  #before_validation :phone_format_before_validation
   before_save :ensure_authentication_token
 
-  validates :phone, :presence => true, :uniqueness => { :case_sensitive => false }
+  #validates :phone, presence: true,
+  #  uniqueness: { case_sensitive: false },
+  #  format:     { with: /\A\+\d{11}\z/, message: "wrong phone format" }
+
+  validates :phone, presence: true, uniqueness: { case_sensitive: false }
 
   has_many :auto_filters, dependent: :destroy
   has_many :devices, dependent: :destroy
@@ -52,8 +57,22 @@ class User < ActiveRecord::Base
       self.authentication_token = generate_authentication_token
     end
   end
+
+  def self.phone_format(p)
+    if !p.nil?
+      formatted = p.gsub(/\D/, "")
+      if formatted.size == 11
+        formatted[0] = "7" if formatted[0] == "8"
+        formatted
+      end
+    end
+  end
  
   private
+
+    def phone_format_before_validation
+      self.phone = User.phone_format(phone) if attribute_present?("phone")
+    end
   
     def generate_authentication_token
       loop do
