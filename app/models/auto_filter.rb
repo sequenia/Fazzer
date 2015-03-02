@@ -20,12 +20,19 @@ class AutoFilter < ActiveRecord::Base
 				else
 					puts adverts.first.id
 					puts "Sending notofication to device #{device.id} of user #{filter.user_id}"
-					NotificationSender.send(device.platform, device.token, {
-						data: {
-							message: adverts_count == 1 ? "Новое объявление" : "Новых объявлений: #{adverts_count}",
-							advert_id: adverts.first.id
-						}
-					})
+
+					first_advert = adverts.first
+					first_advert_mark = first_advert.car_mark
+					first_advert_model = first_advert.car_model
+
+					data = {}
+					data[:advert_id] = first_advert.id
+					data[:car_mark_name] = first_advert_mark.name if first_advert_mark
+					data[:car_model_name] = first_advert_model.name if first_advert_model
+					data[:price] = first_advert.price
+					data[:type] = "new_advert"
+
+					NotificationSender.send(device.platform, device.token, { data: data })
 				end
 			end
 		end
