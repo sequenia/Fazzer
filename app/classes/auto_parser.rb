@@ -171,16 +171,14 @@ class AutoParser < DromParser
 		upped = advert_row.attribute(@@upped_attribute)
 		pinned = advert_row.attribute(@@pinned_attribute)
 
-		if pinned
-			if pinned.value.to_i > 0
-				return @@advert_types[:pinned]
-			end
-		else
-			if upped
-				if upped.value.to_i > 0
-					return @@advert_types[:upped]
-				end
-			end
+		puts '!!!!!!!!!!!!'
+
+		if pinned && pinned.value.to_i > 0
+			puts 'pinned'
+			return @@advert_types[:pinned]
+		elsif upped && upped.value.to_i > 0
+			puts 'upped'
+			return @@advert_types[:upped]
 		end
 
 		return @@advert_types[:default]
