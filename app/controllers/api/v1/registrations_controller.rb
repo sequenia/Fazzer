@@ -6,11 +6,24 @@ class Api::V1::RegistrationsController < Devise::RegistrationsController
 
   def create
     password = random_password
+
+    user = nil
+    if params[:user]
+      if params[:user][:phone]
+        user = User.where({phone: params[:user][:phone]}).first
+        user.update_attributes({
+          password: password,
+          password_confirmation: password
+        }) if user
+      end
+    end
+
     build_resource(sign_up_params.merge({
       password: password,
       password_confirmation: password
     }))
-    if resource.save
+
+    if resource.save || user
       send_sms(resource.phone, password)
       render :status => 200,
            :json => { :success => true,
