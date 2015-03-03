@@ -10,16 +10,16 @@ class AutoFilter < ActiveRecord::Base
 		puts "Try to find adverts to filters..."
 		AutoFilter.all.each do |filter|
 			adverts = filter.find_new_adverts
-			device = Device.where({user_id: filter.user_id, enabled: true}).first
+			devices = Device.where({user_id: filter.user_id, enabled: true})
 			puts "Found #{adverts.size} adverts for filter #{filter.id}"
 
 			adverts_count = adverts.size
 			if adverts_count > 0
-				if device.nil?
-					puts "Device for filter #{filter.id} not found or not active"
+				if devices.size == 0
+					puts "Devices for filter #{filter.id} not found or not active"
 				else
 					puts adverts.first.id
-					puts "Sending notofication to device #{device.id} of user #{filter.user_id}"
+					puts "Sending notofication to user #{filter.user_id}"
 
 					first_advert = adverts.first
 					first_advert_mark = first_advert.car_mark
@@ -32,7 +32,7 @@ class AutoFilter < ActiveRecord::Base
 					data[:price] = first_advert.price
 					data[:type] = "new_advert"
 
-					NotificationSender.send(device.platform, device.token, { data: data })
+					devices.each { |device| NotificationSender.send(device.platform, device.token, { data: data }) }
 				end
 			end
 		end
@@ -58,30 +58,3 @@ class AutoFilter < ActiveRecord::Base
 		attrs
 	end
 end
-
-#if adverts.size > 0
-	#filter_attrs = {
-	#	min_year: filter.min_year,
-	#	max_year: filter.max_year,
-	#	min_price: filter.min_price,
-	#	max_price: filter.max_price,
-	#}
-	#filter_car_model = filter.car_model
-	#filter_car_mark = filter.car_mark
-	#filter_city = filter.city
-	#if filter_car_model
-	#	filter_attrs[:car_model_name] = filter_car_model.name
-	#end
-	#if filter_car_mark
-	#	filter_attrs[:car_mark_name] = filter_car_mark.name
-	#end
-	#if filter_city
-	#	filter_attrs[:city_name] = filter_city.name
-	#end
-
-	#FazzerMailer.new_adverts_message(
-	#	adverts.collect { |advert| { url: advert.url } },
-	#	filter_attrs,
-	#	filter.email
-	#).deliver_later
-#end
