@@ -1,7 +1,11 @@
 class ParserMessenger
 
-	def self.about_parsing_start
-		"Start parsing on #{DateTime.now}"
+	def self.say_about_parsing_start
+		puts "Start parsing on #{DateTime.now}"
+	end
+
+	def self.say_about_no_next_region
+		puts "Can't find next region"
 	end
 
 	def self.say_about_page_loading(page_href)
