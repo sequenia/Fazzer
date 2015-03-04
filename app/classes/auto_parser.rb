@@ -29,33 +29,8 @@ class AutoParser < DromParser
 		upped: "upped"
 	}
 
-	# Типы сохранений объвялений:
-	# Бежать до первого прикрепленного
-	# Бежать до первого поднятого
-	# Бежать до первого обычного
-	@@save_types = {
-		first_pinned_existed: 'first_pinned_existed',
-		first_upped_existed: 'first_upped_existed',
-		first_default_existed: 'first_default_existed',
-		first_pinned_not_existed: 'first_pinned_not_existed',
-		first_upped_not_existed: 'first_upped_not_existed',
-		first_default_not_existed: 'first_default_not_existed'
-	}
-
-	# Для следующего региона скачивает все прикрепленные объявления.
-	# Останавливается при встрече первого обычного объявления, которого нет в БД
-	def setup_next_region
-		parse_next_region(@@save_types[:first_default_not_existed])
-	end
-
-	# Сохраняет последние объявления для следующего.
-	# Останавливается, когда встречает обычное объявление, сохраненное в БД
-	def save_next_region
-		parse_next_region(@@save_types[:first_default_existed])
-	end
-
 	# Запускает парсинг для следующего региона, если парсинг не запущен
-	def parse_next_region(stop_on)
+	def parse_next_region
 		# Начинаем парсить только если предыдущий парсинг завершился
 		if !parsing_is_in_progress
 			ParserMessenger.say_about_parsing_start
@@ -70,7 +45,7 @@ class AutoParser < DromParser
 						success: false
 					})
 
-					AutoParser.new.save_last_region_adverts(region.href, stop_on)
+					AutoParser.new.save_last_region_adverts(region.href)
 					AutoFilter.check_new_adverts
 
 					# После парсинга записываем в бд, что он завершился с успехом
@@ -90,14 +65,14 @@ class AutoParser < DromParser
 	end
 
 	# Сохраняет в БД последние объявления с переданного региона
-	def save_last_region_adverts(region_href, stop_on)
+	def save_last_region_adverts(region_href)
 		ParserMessenger.say_about_region_parsing(region_href)
 
 		session = new_session
 		DromParser.set_region(session)
 
 		page_index = 1
-		while save_adverts_from_page(region_href + "page#{page_index}", stop_on, session)
+		while save_adverts_from_page(region_href, page_index, session)
 			ParserMessenger.say_about_region_page_parsed(page_index, region_href)
 			page_index += 1
 		end
@@ -110,12 +85,10 @@ class AutoParser < DromParser
 	# Парсит все объявления со страници и сохраняет их в БД.
 	# Возвращает false/nil, если нужно закончить парсинг (Последние объявления закончились),
 	# true, если можно продолжать.
-	#
-	# stop_on = ['first_pinned_existed'|'first_pinned_not_existed'|'first_upped_existed'|'first_upped_not_existed'|'first_default_existed'|'first_default_not_existed']
-	def save_adverts_from_page(page_href, stop_on, session)
+	def save_adverts_from_page(region_href, page_index, session)
 		sleep 5
 
-		stop_on ||= @@save_types[:first_default_existed]
+		page_href = region_href + "page#{page_index}"
 
 		if DromParser.visit_page(session, page_href)
 			page = Nokogiri::HTML.parse(session.html)
@@ -128,30 +101,30 @@ class AutoParser < DromParser
 				return false
 			end
 
-			return save_adverts_from_table(adverts_table, stop_on, page_href) && can_show_next_page(page, page_href)
+			# Продолжаем парсинг только в том случае, если
+			# не пройден лимит по дате,
+			# есть пагинатор и
+			# еще не прошли 100 страниц
+			return save_adverts_from_table(adverts_table, page_href) && page_index < 100 && can_show_next_page(page, page_href)
 		end
 	end
 
-	def save_adverts_from_table(adverts_table, stop_on, page_href)
+	# Сохраняет в БД объявления из переданной таблицы.
+	# Возвращает true, если можно продолжать парсинг.
+	# Возвращает false, если парсинг продолжать нельзя.
+	def save_adverts_from_table(adverts_table, page_href)
 		adverts_table.each do |advert|
 			exists = AutoAdvert.exists?({code: advert[:code]})
 			if exists
 				ParserMessenger.say_about_existed_advert(advert)
-				if needs_stop_if_exists(advert, stop_on)
-					ParserMessenger.say_about_stop_region_parsing(stop_on, advert)
-					return false
-				end
 			else
 				sleep 5
 				ParserMessenger.say_about_advert_parsing(advert, page_href)
 				info = AutoAdvertParser.new.get_info(advert[:href])
 				AutoAdvert.create_from_info(info)
-
-				if needs_stop_if_not_exists(advert, stop_on)
-					ParserMessenger.say_about_stop_region_parsing(stop_on, advert)
-					return false
-				end
 			end
+
+			return false if needs_stop(advert)
 		end
 
 		return true
@@ -173,18 +146,6 @@ class AutoParser < DromParser
 	end
 
 	protected
-
-		def needs_stop_if_exists(advert, stop_on)
-			stop_on == @@save_types[:first_pinned_existed] && advert[:type] == @@advert_types[:pinned] ||
-			stop_on == @@save_types[:first_upped_existed] && advert[:type] == @@advert_types[:upped] ||
-			stop_on == @@save_types[:first_default_existed] && advert[:type] == @@advert_types[:default]
-		end
-
-		def needs_stop_if_not_exists(advert, stop_on)
-			stop_on == @@save_types[:first_pinned_not_existed] && advert[:type] == @@advert_types[:pinned] ||
-			stop_on == @@save_types[:first_upped_not_existed] && advert[:type] == @@advert_types[:upped] ||
-			stop_on == @@save_types[:first_default_not_existed] && advert[:type] == @@advert_types[:default]
-		end
 
 		def can_show_next_page(page, page_href)
 			if page.at_css(@@pager_selector).nil?
@@ -235,5 +196,23 @@ class AutoParser < DromParser
 		def get_last_region
 			last_parsing = ParsingResult.last
 			last_parsing.region if last_parsing
+		end
+
+		def date_difference_in_days(d1, d2)
+			# Разность в секундах / (60 * 60 * 24)
+			(d1.to_f - d2.to_f) / 86400.0
+		end
+
+		def needs_stop(advert_info)
+			now = DateTime.now
+
+			day, month = advert_info[:date].split("-")
+			day = day.to_i
+			month = month.to_i
+			year = (month > now.month) ? now.year - 1 : now.year
+
+			advert_date = DateTime.new(year, month, day, 0, 0, 0)
+
+			date_difference_in_days(now, advert_date) >= 2
 		end
 end

@@ -22,5 +22,5 @@
 set :output, "/var/www/log/cron_log.log"
 
 every 1.minute do
-  runner "AutoParser.new.save_next_region"
+  runner "AutoParser.new.parse_next_region"
 end
