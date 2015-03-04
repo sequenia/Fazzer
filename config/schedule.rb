@@ -21,26 +21,6 @@
 
 set :output, "/var/www/log/cron_log.log"
 
-every :day, :at => '10:10am' do
-  runner "AutoParser.new.save_last_adverts"
-end
-
-every :day, :at => '2:10pm' do
-  runner "AutoParser.new.save_last_adverts"
-end
-
-every :day, :at => '6:10pm' do
-  runner "AutoParser.new.save_last_adverts"
-end
-
-every :day, :at => '10:10pm' do
-  runner "AutoParser.new.save_last_adverts"
-end
-
-every :day, :at => '2:10am' do
-  runner "AutoParser.new.save_last_adverts"
-end
-
-every :day, :at => '4:10am' do
-  runner "AutoParser.new.save_last_adverts"
+every 1.minute do
+  runner "AutoParser.new.save_next_region"
 end
