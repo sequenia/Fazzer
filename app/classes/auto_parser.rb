@@ -45,8 +45,7 @@ class AutoParser < DromParser
 						success: false
 					})
 
-					AutoParser.new.save_last_region_adverts(region.href)
-					AutoFilter.check_new_adverts
+					AutoParser.new.save_region_adverts(region.href)
 
 					# После парсинга записываем в бд, что он завершился с успехом
 					result.update_attributes({success: true})
@@ -64,84 +63,104 @@ class AutoParser < DromParser
 		end
 	end
 
-	# Сохраняет в БД последние объявления с переданного региона
-	def save_last_region_adverts(region_href)
+	# Парсит новые объявления с региона
+	def save_region_adverts(region_href)
 		ParserMessenger.say_about_region_parsing(region_href)
 
-		session = new_session
-		DromParser.set_region(session)
+		pages_period = 10    # Со скольки страниц за раз собирать ссылки на объявления
+		page_index = 1       # Номер страницы с объявлениями
 
-		page_index = 1
-		while save_adverts_from_page(region_href, page_index, session)
-			ParserMessenger.say_about_region_page_parsed(page_index, region_href)
-			page_index += 1
+		# Парсим страницы с объявлениями, пока не преодолеем лимит по дате
+		while true
+			ParserMessenger.say_about_adverts_table_parsing
+			result = get_adverts_table(region_href, pages_period, page_index)
+			
+			ParserMessenger.print_adverts_table(result[:adverts_table])
+			save_adverts_from_table(result[:adverts_table])
+			page_index = result[:page_index]
+			AutoFilter.check_new_adverts
+
+			break if !result[:can_continue]
 		end
-
-		session.driver.quit
 
 		ParserMessenger.say_about_region_parsing_end(region_href)
 	end
 
-	# Парсит все объявления со страници и сохраняет их в БД.
-	# Возвращает false/nil, если нужно закончить парсинг (Последние объявления закончились),
-	# true, если можно продолжать.
-	def save_adverts_from_page(region_href, page_index, session)
-		sleep 5
+	# Возвращает объявления с pages_period страниц, начиная с page_index
+	def get_adverts_table(region_href, pages_period, page_index)
+		# Если преодолели лимит страниц, заканчиваем
+		return { adverts_table: [], can_continue: false, page_index: page_index } if page_index >= 100
 
-		page_href = region_href + "page#{page_index}"
+		session = new_session
+		DromParser.set_region(session)
+		new_page_index = page_index
 
-		if DromParser.visit_page(session, page_href)
-			page = Nokogiri::HTML.parse(session.html)
-			ParserMessenger.say_about_adverts_table_parsing(page_href)
-			adverts_table = get_adverts_table(page)
-			ParserMessenger.print_adverts_table(adverts_table)
+		# Собираем ссылки на объявления с pages_period страниц
+		adverts_table = []
+		(0...pages_period).each do |i|
+			# Если преодолели лимит страниц, заканчиваем
+			if page_index >= 100
+				session.driver.quit
+				return { adverts_table: [], can_continue: false, page_index: page_index }
+			end
 
-			if adverts_table.size == 0
-				ParserMessenger.say_about_no_adverts(page_href)
+			sleep 2
+			if DromParser.visit_page(session, region_href + "page#{new_page_index}")
+				page = Nokogiri::HTML.parse(session.html)
+				can_continue = get_adverts_table_from_page(adverts_table, page)
+				# Если преодолели лимит по дате, заканчиваем
+				if !can_continue
+					session.driver.quit
+					return { adverts_table: adverts_table, can_continue: false, page_index: new_page_index }
+				end
+			end
+			new_page_index += 1
+		end
+		session.driver.quit
+
+		result = {
+			adverts_table: adverts_table,
+			can_continue: true,
+			page_index: new_page_index
+		}
+	end
+
+	# Получает таблицу с новыми объявлениями со страницы.
+	# Если преодолен лимит по дате, возвращает false
+	def get_adverts_table_from_page(adverts_table, adverts_page)
+		adverts = adverts_page.css(@@adverts_table_selector)
+		adverts.drop(1).each do |advert|
+			columns = advert.css(@@td_selector)
+			code = advert.attribute(@@advert_id_attribute).value
+			date = columns[@@adverts_table_columns[:date]].text
+
+			if needs_stop(date)
+				puts "Date limit succeed! #{date}"
 				return false
 			end
 
-			# Продолжаем парсинг только в том случае, если
-			# не пройден лимит по дате,
-			# есть пагинатор и
-			# еще не прошли 100 страниц
-			return save_adverts_from_table(adverts_table, page_href) && page_index < 100 && can_show_next_page(page, page_href)
-		end
-	end
-
-	# Сохраняет в БД объявления из переданной таблицы.
-	# Возвращает true, если можно продолжать парсинг.
-	# Возвращает false, если парсинг продолжать нельзя.
-	def save_adverts_from_table(adverts_table, page_href)
-		adverts_table.each do |advert|
-			exists = AutoAdvert.exists?({code: advert[:code]})
-			if exists
-				ParserMessenger.say_about_existed_advert(advert)
+			if AutoAdvert.exists?({code: code})
+				ParserMessenger.say_about_existed_advert(code)
 			else
-				sleep 5
-				ParserMessenger.say_about_advert_parsing(advert, page_href)
-				info = AutoAdvertParser.new.get_info(advert[:href])
-				AutoAdvert.create_from_info(info)
+				adverts_table << {
+					date: date,
+					model: DromParser.strip(columns[@@adverts_table_columns[:model]].text, " \n"),
+					href: columns[@@adverts_table_columns[:date]].css(@@a_selector).first[@@href_attribute_selector],
+					code: advert.attribute(@@advert_id_attribute).value,
+					type: get_advert_type(advert)
+				}
 			end
-
-			return false if needs_stop(advert)
 		end
 
 		return true
 	end
 
-	# Получает таблицу с объявлениями
-	def get_adverts_table(adverts_page)
-		adverts = adverts_page.css(@@adverts_table_selector)
-		adverts.drop(1).collect do |advert|
-			columns = advert.css(@@td_selector)
-			info = {
-				date: columns[@@adverts_table_columns[:date]].text,
-				model: DromParser.strip(columns[@@adverts_table_columns[:model]].text, " \n"),
-				href: columns[@@adverts_table_columns[:date]].css(@@a_selector).first[@@href_attribute_selector],
-				code: advert.attribute(@@advert_id_attribute).value,
-				type: get_advert_type(advert)
-			}
+	def save_adverts_from_table(adverts_table)
+		adverts_table.each do |advert|
+			sleep 2
+			ParserMessenger.say_about_advert_parsing(advert)
+			info = AutoAdvertParser.new.get_info(advert[:href])
+			AutoAdvert.create_from_info(info)
 		end
 	end
 
@@ -203,10 +222,10 @@ class AutoParser < DromParser
 			(d1.to_f - d2.to_f) / 86400.0
 		end
 
-		def needs_stop(advert_info)
+		def needs_stop(date)
 			now = DateTime.now
 
-			day, month = advert_info[:date].split("-")
+			day, month = date.split("-")
 			day = day.to_i
 			month = month.to_i
 			year = (month > now.month) ? now.year - 1 : now.year

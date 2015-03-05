@@ -32,8 +32,8 @@ class ParserMessenger
 		puts "Parsed all new adverts from #{region_href}\n"
 	end
 
-	def self.say_about_adverts_table_parsing(page_href)
-		puts "Getting adverts table from page #{page_href}"
+	def self.say_about_adverts_table_parsing
+		puts "Getting adverts table"
 	end
 
 	def self.print_adverts_table(adverts_table)
@@ -44,16 +44,16 @@ class ParserMessenger
 		puts "ERROR! No adverts on page #{page_href}"
 	end
 
-	def self.say_about_existed_advert(advert)
-		puts "Advert already exists: #{advert[:code]}"
+	def self.say_about_existed_advert(code)
+		puts "Advert already exists: #{code}"
 	end
 
 	def self.say_about_stop_region_parsing(stop_on, advert)
 		puts "STOP! Stop on #{stop_on}. Advert: #{advert}"
 	end
 
-	def self.say_about_advert_parsing(advert, page_href)
-		puts "Getting full info for #{advert[:type]} #{advert[:model]} on page #{page_href}"
+	def self.say_about_advert_parsing(advert)
+		puts "Getting full info for #{advert[:type]} #{advert[:model]}"
 	end
 
 	def self.say_about_pager_missing(page_href)
