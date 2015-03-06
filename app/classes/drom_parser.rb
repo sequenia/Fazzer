@@ -16,8 +16,6 @@ class DromParser
 	end
 
 	def self.visit_page(session, page)
-		ParserMessenger.say_about_page_loading(page)
-
 		attempts = 0
 		max_attempts = 5
 		result = nil

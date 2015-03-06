@@ -44,12 +44,10 @@ class AutoAdvertParser < DromParser
 				get_another_data(info, page)
 
 				session.driver.quit
-				ParserMessenger.show_advert_info(info)
 
 				info
 			else
 				session.driver.quit
-				ParserMessenger.say_about_nothing_data
 			end
 		end
 	end

@@ -1,3 +1,5 @@
+require 'auto_advert_parser.rb'
+
 class AutoParser < DromParser
 	@@adverts_table_selector = "div.tab1 table tr" # Строки таблицы с объявлениями
 	@@pager_selector = "div.pager"
@@ -115,6 +117,8 @@ class AutoParser < DromParser
 
 			sleep 2
 			page_href = region_href + "page#{new_page_index}"
+
+			ParserMessenger.say_about_page_loading(page_href)
 			if DromParser.visit_page(session, page_href)
 				page = Nokogiri::HTML.parse(session.html)
 				# Если преодолели лимит по дате или нельзя показать следующую страницу, заканчиваем
@@ -165,12 +169,30 @@ class AutoParser < DromParser
 		return true
 	end
 
+	# Собирает полную информацию об объявлениях и сохраняет ее в БД
 	def save_adverts_from_table(adverts_table)
-		adverts_table.each do |advert|
+		adverts_table.in_groups_of(3) do |adverts|
+			threads = []
+			mutex = Mutex.new
+			infos = []
+
 			sleep 2
-			ParserMessenger.say_about_advert_parsing(advert)
-			info = AutoAdvertParser.new.get_info(advert[:href])
-			AutoAdvert.create_from_info(info)
+
+			for advert in adverts
+				if advert
+					ParserMessenger.say_about_advert_parsing(advert)
+					threads << Thread.new(advert) do |thread_advert|
+						info = AutoAdvertParser.new.get_info(thread_advert[:href])
+						mutex.synchronize { infos << info }
+					end
+				end
+			end
+			threads.each {|thr| thr.join }
+
+			infos.each do |info|
+				ParserMessenger.show_advert_info(info)
+				AutoAdvert.create_from_info(info)
+			end
 		end
 	end
 

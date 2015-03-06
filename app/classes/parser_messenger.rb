@@ -53,7 +53,7 @@ class ParserMessenger
 	end
 
 	def self.say_about_advert_parsing(advert)
-		puts "Getting full info for #{advert[:type]} #{advert[:model]} on #{advert[:page_href]}"
+		puts "Getting full info for #{advert[:type]} #{advert[:href]} on #{advert[:page_href]}"
 	end
 
 	def self.say_about_pager_missing(page_href)
