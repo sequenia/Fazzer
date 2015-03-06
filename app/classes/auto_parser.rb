@@ -71,7 +71,7 @@ class AutoParser < DromParser
 	def save_region_adverts(region_href)
 		ParserMessenger.say_about_region_parsing(region_href)
 
-		pages_period = 10    # Со скольки страниц за раз собирать ссылки на объявления
+		pages_period = 2     # Со скольки страниц за раз собирать ссылки на объявления
 		page_index = 1       # Номер текущей страницы с объявлениями
 
 		# Парсим страницы с объявлениями, пока не преодолеем лимит по дате или по страницам
@@ -89,7 +89,7 @@ class AutoParser < DromParser
 		# Получаем ссылки на объявления с pages_period страниц, загружаем их и сохраняем в БД
 		get_adverts_table(region_href, pages_period, page_index) do |adverts_table|
 			ParserMessenger.print_adverts_table(adverts_table)
-			save_adverts_from_table(adverts_table)
+			adverts_table.in_groups_of(3) { |adverts| save_adverts_from_table(adverts) }
 			AutoFilter.check_new_adverts
 		end
 	end
@@ -169,31 +169,32 @@ class AutoParser < DromParser
 		return true
 	end
 
-	# Собирает полную информацию об объявлениях и сохраняет ее в БД
-	def save_adverts_from_table(adverts_table)
-		adverts_table.in_groups_of(3) do |adverts|
-			threads = []
-			mutex = Mutex.new
-			infos = []
+	# Собирает полную информацию об объявлениях и сохраняет ее в БД.
+	# ВНИМАНИЕ! Страницы грузятся параллельно! Не передавать большое число объявлений за раз!
+	def save_adverts_from_table(adverts)
+		threads = []
+		mutex = Mutex.new
+		infos = []
 
-			sleep 2
+		sleep 2
 
-			for advert in adverts
-				if advert
-					ParserMessenger.say_about_advert_parsing(advert)
-					threads << Thread.new(advert) do |thread_advert|
-						info = AutoAdvertParser.new.get_info(thread_advert[:href])
-						mutex.synchronize { infos << info }
-					end
+		for advert in adverts
+			if advert
+				ParserMessenger.say_about_advert_parsing(advert)
+				threads << Thread.new(advert) do |thread_advert|
+					info = AutoAdvertParser.new.get_info(thread_advert[:href])
+					mutex.synchronize { infos << info }
 				end
 			end
-			threads.each {|thr| thr.join }
-
-			infos.each do |info|
-				ParserMessenger.show_advert_info(info)
-				AutoAdvert.create_from_info(info)
-			end
 		end
+		threads.each {|thr| thr.join }
+
+		infos.each do |info|
+			ParserMessenger.show_advert_info(info)
+			AutoAdvert.create_from_info(info)
+		end
+
+		return true
 	end
 
 	protected
