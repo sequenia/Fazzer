@@ -29,22 +29,23 @@ class AutoParser < DromParser
 		upped: "upped"
 	}
 
-	# Запускает парсинг для следующего региона, если парсинг не запущен
+	# Запускает парсинг для следующего по счету региона, если парсинг не запущен
 	def parse_next_region
 		# Начинаем парсить только если предыдущий парсинг завершился
 		if !parsing_is_in_progress
 			ParserMessenger.say_about_parsing_start
 
-			region = get_next_region
+			region = get_next_region # Достаем из БД следующий регион
 			if region
 				begin
-					# Пытаемся распарсить регион и заносим информацию об этом в БД
+					# Заносим в БД информацию о начале парсинга
 					result = ParsingResult.create({
 						region_id: region.id,
 						is_parsing: true,
 						success: false
 					})
 
+					# Ищем на сайте новые объявления и сохраняем их
 					AutoParser.new.save_region_adverts(region.href)
 
 					# После парсинга записываем в бд, что он завершился с успехом
@@ -63,71 +64,79 @@ class AutoParser < DromParser
 		end
 	end
 
-	# Парсит новые объявления с региона
+	# Сохраняет в БД новые объявления с региона за последние 2 дня.
+	# Собирает данные со страниц порциями по pages_period штук.
 	def save_region_adverts(region_href)
 		ParserMessenger.say_about_region_parsing(region_href)
 
 		pages_period = 10    # Со скольки страниц за раз собирать ссылки на объявления
-		page_index = 1       # Номер страницы с объявлениями
+		page_index = 1       # Номер текущей страницы с объявлениями
 
-		# Парсим страницы с объявлениями, пока не преодолеем лимит по дате
-		while true
-			ParserMessenger.say_about_adverts_table_parsing
-			result = get_adverts_table(region_href, pages_period, page_index)
-			
-			ParserMessenger.print_adverts_table(result[:adverts_table])
-			save_adverts_from_table(result[:adverts_table])
-			page_index = result[:page_index]
-			AutoFilter.check_new_adverts
-
-			break if !result[:can_continue]
+		# Парсим страницы с объявлениями, пока не преодолеем лимит по дате или по страницам
+		while save_region_part(region_href, pages_period, page_index)
+			page_index += pages_period
 		end
 
 		ParserMessenger.say_about_region_parsing_end(region_href)
 	end
 
-	# Возвращает объявления с pages_period страниц, начиная с page_index
-	def get_adverts_table(region_href, pages_period, page_index)
-		# Если преодолели лимит страниц, заканчиваем
-		return { adverts_table: [], can_continue: false, page_index: page_index } if page_index >= 100
+	# Сохраняет объявления с pages_period страниц, начиная с page_index.
+	# Возвращает true, если можно продолжать работу
+	def save_region_part(region_href, pages_period, page_index)
+		ParserMessenger.say_about_adverts_table_parsing
+		# Получаем ссылки на объявления с pages_period страниц, загружаем их и сохраняем в БД
+		get_adverts_table(region_href, pages_period, page_index) do |adverts_table|
+			ParserMessenger.print_adverts_table(adverts_table)
+			save_adverts_from_table(adverts_table)
+			AutoFilter.check_new_adverts
+		end
+	end
+
+	# Собирает ссылки на объявления с pages_period страниц, начиная с page_index,
+	# И передает таблицу объявлений в замыкание closure.
+	# Возвращает true, если можно продолжать работу.
+	def get_adverts_table(region_href, pages_period, page_index, &closure)
+		return false if page_index >= 100
 
 		session = new_session
-		DromParser.set_region(session)
 		new_page_index = page_index
+		result = true
+		adverts_table = []
+
+		DromParser.set_region(session) # Задаем регион для корректного отображения объявлений
 
 		# Собираем ссылки на объявления с pages_period страниц
-		adverts_table = []
 		(0...pages_period).each do |i|
 			# Если преодолели лимит страниц, заканчиваем
 			if page_index >= 100
-				session.driver.quit
-				return { adverts_table: [], can_continue: false, page_index: page_index }
+				result = false
+				break
 			end
 
 			sleep 2
-			if DromParser.visit_page(session, region_href + "page#{new_page_index}")
+			page_href = region_href + "page#{new_page_index}"
+			if DromParser.visit_page(session, page_href)
 				page = Nokogiri::HTML.parse(session.html)
-				can_continue = get_adverts_table_from_page(adverts_table, page)
-				# Если преодолели лимит по дате, заканчиваем
-				if !can_continue
-					session.driver.quit
-					return { adverts_table: adverts_table, can_continue: false, page_index: new_page_index }
+				# Если преодолели лимит по дате или нельзя показать следующую страницу, заканчиваем
+				if !(get_adverts_table_from_page(adverts_table, page, page_href) && can_show_next_page(page, page_href))
+					result = false
+					break
 				end
 			end
 			new_page_index += 1
 		end
 		session.driver.quit
 
-		result = {
-			adverts_table: adverts_table,
-			can_continue: true,
-			page_index: new_page_index
-		}
+		# Выполняем работу над объявлениями
+		closure ||= lambda{ }
+		closure.call(adverts_table)
+
+		result
 	end
 
-	# Получает таблицу с новыми объявлениями со страницы.
-	# Если преодолен лимит по дате, возвращает false
-	def get_adverts_table_from_page(adverts_table, adverts_page)
+	# Дописывает новые объявления со страницы в массив adverts_table.
+	# Если преодолен лимит по дате, возвращает false.
+	def get_adverts_table_from_page(adverts_table, adverts_page, page_href)
 		adverts = adverts_page.css(@@adverts_table_selector)
 		adverts.drop(1).each do |advert|
 			columns = advert.css(@@td_selector)
@@ -147,7 +156,8 @@ class AutoParser < DromParser
 					model: DromParser.strip(columns[@@adverts_table_columns[:model]].text, " \n"),
 					href: columns[@@adverts_table_columns[:date]].css(@@a_selector).first[@@href_attribute_selector],
 					code: advert.attribute(@@advert_id_attribute).value,
-					type: get_advert_type(advert)
+					type: get_advert_type(advert),
+					page_href: page_href
 				}
 			end
 		end
