@@ -71,7 +71,7 @@ class AutoParser < DromParser
 	def save_region_adverts(region_href)
 		ParserMessenger.say_about_region_parsing(region_href)
 
-		pages_period = 2     # Со скольки страниц за раз собирать ссылки на объявления
+		pages_period = 10    # Со скольки страниц за раз собирать ссылки на объявления
 		page_index = 1       # Номер текущей страницы с объявлениями
 
 		# Парсим страницы с объявлениями, пока не преодолеем лимит по дате или по страницам
