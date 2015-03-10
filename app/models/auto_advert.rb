@@ -1,3 +1,5 @@
+# Модель объявлений.
+# В таблице хранятся объявления о продаже машин.
 class AutoAdvert < ActiveRecord::Base
 	belongs_to :city
 	belongs_to :car_mark

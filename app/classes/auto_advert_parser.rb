@@ -18,41 +18,114 @@ class AutoAdvertParser < DromParser
 	@@src_attribute = "src"
 	@@another_src_attribute = "srctemp"
 
-	def get_info(href)
+	@@adverts_per_process = 100
+	@@adverts_per_thread = 5
+
+	# Собирает полную информацию о первых @@adverts_per_process объявлениях
+	# из таблицы new_auto_adverts
+	def parse_full_info
+		# Начинаем парсить только если предыдущий парсинг завершился
+		if !parsing_is_in_progress
+			ParserMessenger.say_about_parsing_start
+
+			begin
+				# Заносим в БД информацию о начале парсинга
+				result = ParsingResult.create({
+					result_type: "adverts",
+					is_parsing: true,
+					success: false
+				})
+
+				NewAutoAdvert.order("id ASC")
+				.limit(@@adverts_per_process)
+				.in_groups_of(@@adverts_per_thread) do |adverts|
+					save_adverts(adverts)
+					adverts.each { |advert| advert.destroy if advert }
+				end
+
+				# После парсинга записываем в бд, что он завершился с успехом
+				result.update_attributes({success: true, info: "#{@@adverts_per_process} adverts parsed"})
+			rescue Exception => e
+				result.update_attributes({success: false, info: e.message}) if result
+				puts e.message
+				puts e.backtrace.inspect
+			ensure
+				# В любом случае сообщаем о том, что парсинг завершился
+				result.update_attributes({is_parsing: false}) if result
+			end
+		end
+	end
+
+	# Собирает полную информацию об объявлениях и сохраняет ее в БД.
+	# ВНИМАНИЕ! Страницы грузятся параллельно! Не передавать большое число объявлений за раз!
+	def save_adverts(adverts)
+		threads = []
+		mutex = Mutex.new
+		infos = []
+
+		sleep 2
+
+		for advert in adverts
+			if advert
+				ParserMessenger.say_about_advert_parsing(advert)
+				threads << Thread.new(advert) do |thread_advert|
+					info = AutoAdvertParser.new.get_info(thread_advert, mutex)
+					mutex.synchronize { infos << info }
+				end
+			end
+		end
+		threads.each {|thr| thr.join }
+
+		infos.each do |info|
+			ParserMessenger.show_advert_info(info)
+			AutoAdvert.create_from_info(info)
+		end
+
+		return true
+	end
+
+	def get_info(advert, mutex)
 		session = new_session
 
-		if DromParser.visit_page(session, href)
+		if DromParser.visit_page(session, advert.url)
+			mutex.synchronize { ParserMessenger.say_loaded(advert.url) }
+
 			page = Nokogiri::HTML.parse(session.html)
+			info = nil
 
 			if !page.at_css(@@advert_text_selector).nil?
 				photo_url = PhotosLoader.new.get_photo_url(page)
 				photo_preview_url = PhotosLoader.new.get_photo_preview_url(photo_url, page)
+
 				info = {
 					code: get_code(page),
-					url: href,
+					url: advert.url,
 					date: get_date(page),
 					mark: get_mark(page),
 					model: get_model(page),
 					year: get_year(page),
 					price: get_price(page),
 					photo_url: photo_url,
-					photo_preview_url: photo_preview_url,
+					photo_preview_url: photo_url ? advert.photo_preview_url : photo_preview_url,
 					photos_processed: true,
 					phones: []
 				}
 
 				get_another_data(info, page)
-
-				session.driver.quit
-
-				info
-			else
-				session.driver.quit
 			end
+
+			session.driver.quit
+			info
 		end
 	end
 
 	private
+
+		# Возвращает true, если парсинг уже запущен
+		def parsing_is_in_progress
+			last_parsing = ParsingResult.where({result_type: "adverts"}).last
+			last_parsing ? last_parsing.is_parsing : false
+		end
 
 		def get_phones(session)
 			return nil unless session.has_link?(@@show_phones_link_text)

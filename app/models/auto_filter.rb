@@ -1,3 +1,5 @@
+# Фильтр.
+# В таблице хранятся пользовательские фильтры.
 class AutoFilter < ActiveRecord::Base
 	belongs_to :car_mark
 	belongs_to :car_model

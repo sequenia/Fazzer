@@ -23,7 +23,6 @@ class DromParser
 		while true
 			begin
 				session.visit page
-				ParserMessenger.say_loaded(page)
 				result = true
 				break
 			rescue Capybara::Poltergeist::TimeoutError => ex

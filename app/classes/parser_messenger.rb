@@ -53,7 +53,7 @@ class ParserMessenger
 	end
 
 	def self.say_about_advert_parsing(advert)
-		puts "Getting full info for #{advert[:type]} #{advert[:href]} on #{advert[:page_href]}"
+		puts "Getting full info for #{advert.url} with code #{advert.code} on #{advert.region_href}"
 	end
 
 	def self.say_about_pager_missing(page_href)
@@ -61,7 +61,7 @@ class ParserMessenger
 	end
 
 	def self.show_advert_info(info)
-		puts "Info for #{info[:mark]} #{info[:model]} parsed. Advert code: #{info[:code]}"
+		puts "Info for #{info[:mark]} #{info[:model]} parsed. Advert code: #{info[:code]}" if info
 	end
 
 	def self.say_about_nothing_data
