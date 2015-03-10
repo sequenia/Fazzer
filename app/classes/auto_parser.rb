@@ -176,7 +176,7 @@ class AutoParser < DromParser
 
 		# Возвращает true, если парсинг уже запущен
 		def parsing_is_in_progress
-			last_parsing = ParsingResult.where({result_type: "regions"}).last
+			last_parsing = ParsingResult.where({result_type: ParsingResult.result_types[:regions]}).last
 			if last_parsing
 				last_parsing.is_parsing
 			else
@@ -198,7 +198,7 @@ class AutoParser < DromParser
 
 		# Возвращает регион последнего парсинга
 		def get_last_region
-			last_parsing = ParsingResult.where({result_type: "regions"}).last
+			last_parsing = ParsingResult.where({result_type: ParsingResult.result_types[:regions]}).last
 			last_parsing.region if last_parsing
 		end
 

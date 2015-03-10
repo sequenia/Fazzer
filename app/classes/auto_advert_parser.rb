@@ -119,13 +119,17 @@ class AutoAdvertParser < DromParser
 		end
 	end
 
-	private
-
 		# Возвращает true, если парсинг уже запущен
 		def parsing_is_in_progress
-			last_parsing = ParsingResult.where({result_type: "adverts"}).last
-			last_parsing ? last_parsing.is_parsing : false
+			ParsingResult.where({
+				result_type: ParsingResult.result_types[:adverts],
+				is_parsing: true
+			}).first ? true : false
 		end
+
+	private
+
+
 
 		def get_phones(session)
 			return nil unless session.has_link?(@@show_phones_link_text)
