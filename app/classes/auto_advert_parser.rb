@@ -69,6 +69,8 @@ class AutoAdvertParser < DromParser
 			save_adverts(adverts)
 			adverts.each { |advert| advert.update_attributes({parsed: true}) if advert }
 		end
+
+		AutoFilter.check_new_adverts
 	end
 
 	# Собирает полную информацию об объявлениях и сохраняет ее в БД.
