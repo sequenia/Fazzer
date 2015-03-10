@@ -1,5 +1,7 @@
 Fazzer::Application.routes.draw do
 
+  resources :admin, only: [:index]
+
   devise_for :users
   namespace :api do
     namespace :v1 do

@@ -18,10 +18,20 @@ class AutoAdvertParser < DromParser
 	@@src_attribute = "src"
 	@@another_src_attribute = "srctemp"
 
-	@@adverts_per_process = 100
-	@@adverts_per_thread = 5
+	attr_accessor :adverts_per_thread, :adverts_per_process
 
-	# Собирает полную информацию о первых @@adverts_per_process объявлениях
+	def initialize
+		settings = Setting.first
+		if settings
+			self.adverts_per_process = settings.adverts_per_process
+			self.adverts_per_thread = settings.adverts_per_thread
+		else
+			self.adverts_per_process = 100
+			self.adverts_per_thread = 5
+		end
+	end
+
+	# Собирает полную информацию о первых adverts_per_process объявлениях
 	# из таблицы new_auto_adverts
 	def parse_full_info
 		# Начинаем парсить только если предыдущий парсинг завершился
@@ -36,15 +46,10 @@ class AutoAdvertParser < DromParser
 					success: false
 				})
 
-				NewAutoAdvert.order("id ASC")
-				.limit(@@adverts_per_process)
-				.in_groups_of(@@adverts_per_thread) do |adverts|
-					save_adverts(adverts)
-					adverts.each { |advert| advert.destroy if advert }
-				end
+				parse_first_adverts
 
 				# После парсинга записываем в бд, что он завершился с успехом
-				result.update_attributes({success: true, info: "#{@@adverts_per_process} adverts parsed"})
+				result.update_attributes({success: true, info: "#{self.adverts_per_process} adverts parsed"})
 			rescue Exception => e
 				result.update_attributes({success: false, info: e.message}) if result
 				puts e.message
@@ -53,6 +58,16 @@ class AutoAdvertParser < DromParser
 				# В любом случае сообщаем о том, что парсинг завершился
 				result.update_attributes({is_parsing: false}) if result
 			end
+		end
+	end
+
+	def parse_first_adverts
+		NewAutoAdvert.where({parsed: false})
+		.order("id ASC")
+		.limit(self.adverts_per_process)
+		.in_groups_of(self.adverts_per_thread) do |adverts|
+			save_adverts(adverts)
+			adverts.each { |advert| advert.update_attributes({parsed: true}) if advert }
 		end
 	end
 

@@ -1,0 +1,53 @@
+<div style="padding: 15px">
+  <p>Объявлений в базе: <%= AutoAdvert.all.size %></p>
+  <p>Объявлений в очереди на парсинг: <%= NewAutoAdvert.where({parsed: false}).size %></p>
+  <p>Все регионы обработаны за <%= ParsingResult.regions_process_time %> часов</p>
+  <p>Появилось объявлений за сутки: <%= ParsingResult.new_adverts_speed %></p>
+  <p>Обработано объявлений за сутки: <%= ParsingResult.adverts_parsing_speed %></p>
+
+  <p>Последние <%= Region.all.size %> региональных парсингов:</p>
+  <table style="text-align: left">
+    <thead>
+      <tr>
+        <th>Регион</th>
+        <th>Успех</th>
+        <th>Дата начала</th>
+        <th>Информация</th>
+        <th>Идет парсинг</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% ParsingResult.last_regions_results.each do |parsing| %>
+      <tr>
+        <td><%= parsing.get_region %></td>
+        <td><%= parsing.success %></td>
+        <td><%= parsing.created_at.strftime("%d.%m.%Y %H:%M:%S") %></td>
+        <td><%= parsing.info %></td>
+        <td><%= parsing.is_parsing %></td>
+      </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <p>Последние 10 парсингов объявлений:</p>
+  <table style="text-align: left">
+    <thead>
+      <tr>
+        <th>Идет парсинг</th>
+        <th>Успех</th>
+        <th>Дата начала</th>
+        <th>Информация</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% ParsingResult.last_adverts_results.each do |parsing| %>
+      <tr>
+        <td><%= parsing.is_parsing %></td>
+        <td><%= parsing.success %></td>
+        <td><%= parsing.created_at.strftime("%d.%m.%Y %H:%M:%S") %></td>
+        <td><%= parsing.info %></td>
+      </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
