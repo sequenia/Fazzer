@@ -1,5 +1,5 @@
 # config valid only for Capistrano 3.1
-lock '3.3.5'
+lock '3.4.0'
 
 set :application, 'Fazzer'
 set :deploy_to, '/var/www/apps/Fazzer'
