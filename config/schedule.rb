@@ -21,10 +21,10 @@
 
 set :output, "/var/www/log/cron_log.log"
 
-every 1.minute do
-  runner "AutoParser.new.parse_next_region"
-end
+#every 1.minute do
+#  runner "AutoParser.new.parse_next_region"
+#end
 
-every 1.minute do
-  runner "AutoAdvertParser.new.parse_full_info"
-end
+#every 1.minute do
+#  runner "AutoAdvertParser.new.parse_full_info"
+#end
