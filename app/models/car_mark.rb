@@ -5,6 +5,8 @@ class CarMark < ActiveRecord::Base
 	after_update :update_version
 	after_destroy :update_version
 
+	has_many :car_models
+
 	def self.find_or_create_by_name(name)
 		existed = CarMark.where("lower(name) = :name", {name: name.mb_chars.downcase.to_s}).first
 

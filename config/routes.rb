@@ -22,6 +22,7 @@ Fazzer::Application.routes.draw do
       get 'cities_version' => 'cities#version', :as => 'cities_version'
       get 'car_marks_version' => 'car_marks#version', :as => 'car_marks_version'
       get 'car_models_version' => 'car_models#version', :as => 'car_models_version'
+      get 'get_car_marks' => 'car_marks#get_car_marks', :as => 'get_car_marks'
     end
   end
   # The priority is based upon order of creation: first created -> highest priority.
